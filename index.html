@@ -3,38 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Solo DnD Engine - DnD Dice Mechanics Edition</title>
+  <title>Solo DnD Engine - PC & Mobile Dual Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .chat-scroll::-webkit-scrollbar { width: 5px; }
+    .chat-scroll::-webkit-scrollbar { width: 6px; }
     .chat-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    .chat-scroll::-webkit-scrollbar-track { background: transparent; }
     .editable { background: transparent; border-bottom: 1px dashed #475569; outline: none; }
     .editable:focus { border-bottom-color: #f59e0b; background: rgba(51, 65, 85, 0.4); }
-    .choice-btn:hover { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
+    .choice-btn { transition: all 0.2s ease; }
+    .choice-btn:hover { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.15); transform: translateY(-1px); }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
 
   <!-- Top Header -->
-  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex justify-between items-center shadow-md flex-shrink-0">
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex justify-between items-center shadow-md flex-shrink-0 z-30">
     <div class="flex items-center gap-2.5">
       <i class="fa-solid fa-dragon text-amber-500 text-xl"></i>
-      <h1 class="font-bold text-sm sm:text-base tracking-wide text-amber-200">Solo DnD Adventure</h1>
+      <h1 class="font-bold text-sm sm:text-base tracking-wide text-amber-200">Solo DnD Tabletop Experience</h1>
     </div>
     
     <div class="flex items-center gap-2">
-      <button onclick="takeShortRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1 rounded-lg text-xs transition items-center gap-1.5">
+      <button onclick="takeShortRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs transition items-center gap-1.5 shadow-sm">
         <i class="fa-solid fa-mug-hot"></i> Short Rest
       </button>
-      <button onclick="takeLongRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1 rounded-lg text-xs transition items-center gap-1.5">
+      <button onclick="takeLongRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs transition items-center gap-1.5 shadow-sm">
         <i class="fa-solid fa-bed"></i> Long Rest
       </button>
 
-      <button onclick="toggleSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs border border-slate-700 flex items-center gap-1.5 transition">
+      <button onclick="toggleSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs border border-slate-700 flex items-center gap-1.5 transition shadow-sm">
         <i class="fa-solid fa-gear text-amber-400"></i>
-        <span>ตั้งค่า API</span>
+        <span>ตั้งค่า API / โมเดล</span>
       </button>
     </div>
   </header>
@@ -42,13 +44,13 @@
   <!-- Main Viewport Area -->
   <main class="flex-1 flex overflow-hidden relative">
     
-    <!-- Left Column: Character Sheet -->
-    <aside id="characterPane" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900 md:bg-slate-900/90 border-r border-slate-800 flex flex-col p-3.5 gap-3 overflow-y-auto chat-scroll absolute md:static inset-0 z-20 hidden md:flex">
+    <!-- Left Column: Character Sheet, Lore & Dice (PC Sidebar / Mobile Tab) -->
+    <aside id="characterPane" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900 md:bg-slate-900/95 border-r border-slate-800 flex flex-col p-3.5 gap-3 overflow-hidden absolute md:static inset-0 z-20 hidden md:flex">
       
       <!-- Character Identity Card -->
-      <div class="bg-slate-800/80 rounded-xl p-3.5 border border-amber-500/20 shadow">
+      <div class="bg-slate-800/80 rounded-xl p-3 border border-amber-500/20 shadow-sm flex-shrink-0">
         <div class="flex items-center gap-3">
-          <div class="relative group w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-950 flex-shrink-0 cursor-pointer" onclick="document.getElementById('avatarFileInput').click()">
+          <div class="relative group w-13 h-13 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-950 flex-shrink-0 cursor-pointer" onclick="document.getElementById('avatarFileInput').click()">
             <img id="charAvatar" src="" alt="Avatar" class="w-full h-full object-cover hidden">
             <div id="avatarPlaceholder" class="w-full h-full flex flex-col items-center justify-center text-amber-300 text-xs">
               <i class="fa-solid fa-camera"></i>
@@ -60,14 +62,14 @@
           <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarCompress(event)">
 
           <div class="flex-1 min-w-0">
-            <input id="charName" value="King Halo" class="editable font-bold text-amber-300 text-sm w-full" placeholder="ชื่อตัวละคร" onchange="saveSheet()">
-            <input id="charClass" value="Paladin (Oath of Glory) | Lv. 1" class="editable text-[11px] text-slate-400 w-full mt-0.5" placeholder="คลาส/ระดับ" onchange="saveSheet()">
+            <input id="charName" value="King Halo" class="editable font-bold text-amber-300 text-sm w-full truncate" placeholder="ชื่อตัวละคร" onchange="saveSheet()">
+            <input id="charClass" value="Paladin (Oath of Glory) | Lv. 1" class="editable text-[11px] text-slate-400 w-full mt-0.5 truncate" placeholder="คลาส/ระดับ" onchange="saveSheet()">
           </div>
         </div>
 
         <!-- Vital Stats -->
-        <div class="grid grid-cols-4 gap-1.5 mt-3 text-center">
-          <div class="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+        <div class="grid grid-cols-4 gap-1.5 mt-2.5 text-center">
+          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
             <span class="text-[9px] text-slate-400 uppercase block font-semibold">HP</span>
             <div class="flex justify-center items-center gap-0.5 mt-0.5">
               <input id="currentHp" type="number" value="12" class="editable text-center text-emerald-400 font-bold text-xs w-7" onchange="saveSheet()">
@@ -75,64 +77,66 @@
               <input id="maxHp" type="number" value="12" class="editable text-center text-slate-400 text-xs w-7" onchange="saveSheet()">
             </div>
           </div>
-          <div class="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
             <span class="text-[9px] text-slate-400 uppercase block font-semibold">AC</span>
             <input id="charAc" type="number" value="16" class="editable text-center text-sky-400 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
           </div>
-          <div class="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
             <span class="text-[9px] text-slate-400 uppercase block font-semibold">Speed</span>
             <input id="charSpeed" value="35 ft" class="editable text-center text-amber-400 text-xs w-full mt-0.5" onchange="saveSheet()">
           </div>
-          <div class="bg-slate-950/80 p-1.5 rounded border border-slate-800">
+          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
             <span class="text-[9px] text-amber-400 uppercase block font-semibold">Pride</span>
             <input id="charPride" type="number" value="2" class="editable text-center text-amber-300 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
           </div>
         </div>
       </div>
 
-      <!-- Rest Bar on Mobile view -->
-      <div class="flex md:hidden gap-2">
-        <button onclick="takeShortRest()" class="flex-1 bg-slate-800 py-2 rounded-lg text-xs text-amber-300 border border-slate-700">
-          <i class="fa-solid fa-mug-hot mr-1"></i> Short Rest
+      <!-- Sidebar Sub-Tabs (จัดการพื้นที่จอ PC / Mobile ให้ไม่ล้น) -->
+      <div class="flex bg-slate-950/80 p-1 rounded-lg border border-slate-800 flex-shrink-0 text-xs">
+        <button onclick="switchSidebarSubTab('stats')" id="subTabStatsBtn" class="flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold transition">
+          <i class="fa-solid fa-backpack mr-1"></i> ของ & การทอย
         </button>
-        <button onclick="takeLongRest()" class="flex-1 bg-slate-800 py-2 rounded-lg text-xs text-emerald-400 border border-slate-700">
-          <i class="fa-solid fa-bed mr-1"></i> Long Rest
+        <button onclick="switchSidebarSubTab('lore')" id="subTabLoreBtn" class="flex-1 py-1 rounded text-slate-400 hover:text-slate-200 transition">
+          <i class="fa-solid fa-book-atlas mr-1"></i> Lore & ตัวตน
         </button>
       </div>
 
-      <!-- PC Embedded Dice Deck -->
-      <div class="hidden md:flex flex-col bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 gap-1.5">
-        <div class="flex justify-between items-center text-xs">
-          <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">🎲 Dice Tool (PC)</span>
-          <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
+      <!-- Tab View 1: Stats, Dice & Inventory -->
+      <div id="subTabStatsPane" class="flex-1 flex flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
+        <!-- Desktop Embedded Dice Deck -->
+        <div id="pcDiceCard" class="hidden md:flex flex-col bg-slate-800/50 rounded-xl p-2.5 border border-slate-800 gap-1.5 transition">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">🎲 Dice Tool (PC)</span>
+            <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
+              <option value="20" selected>d20 (Skill / Attack)</option>
+              <option value="4">d4</option>
+              <option value="6">d6</option>
+              <option value="8">d8</option>
+              <option value="10">d10</option>
+              <option value="12">d12</option>
+            </select>
+            <input type="number" id="diceModPC" value="2" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
+            <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer select-none">
+              <input type="checkbox" id="advCheckPC" class="accent-amber-500 rounded"> Adv
+            </label>
+            <button onclick="executeRoll('PC')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1 rounded text-xs transition shadow">ทอยเต๋า</button>
+          </div>
         </div>
-        <div class="flex items-center gap-1.5">
-          <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
-            <option value="20" selected>d20 (Skill/Attack)</option>
-            <option value="4">d4</option>
-            <option value="6">d6</option>
-            <option value="8">d8</option>
-            <option value="10">d10</option>
-            <option value="12">d12</option>
-          </select>
-          <input type="number" id="diceModPC" value="2" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
-          <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
-            <input type="checkbox" id="advCheckPC" class="accent-amber-500 rounded"> Adv
-          </label>
-          <button onclick="executeRoll('PC')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1 rounded text-xs transition">ทอยเต๋า</button>
-        </div>
-      </div>
 
-      <!-- Inventory & Companions -->
-      <div class="flex-1 flex flex-col gap-2.5 min-h-[200px]">
-        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1">
+        <!-- Inventory -->
+        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[110px]">
           <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-briefcase"></i> กระเป๋าไอเทม & ยุทโธปกรณ์
           </span>
           <textarea id="charInventory" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
         </div>
 
-        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1">
+        <!-- Companions -->
+        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[90px]">
           <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-users"></i> สหายปาร์ตี้ (NPC)
           </span>
@@ -140,9 +144,30 @@
         </div>
       </div>
 
+      <!-- Tab View 2: Lore & Personality -->
+      <div id="subTabLorePane" class="flex-1 hidden flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
+        <!-- Character Personality -->
+        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[120px]">
+          <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center justify-between">
+            <span><i class="fa-solid fa-user-tag mr-1"></i> บุคลิก & ภูมิหลังตัวละคร</span>
+            <span class="text-[10px] text-slate-400">DM อิงตามนี้</span>
+          </span>
+          <textarea id="charPersonality" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="บุคลิกตัวละคร...">คุณหนูตระกูลสูงศักดิ์ ผู้รักเกียรติยศและความสง่างาม ปฏิเสธความช่วยเหลือจากตระกูลเพื่อพิสูจน์ชัยชนะด้วยตนเอง เป็นคนปากร้ายใจดี เกลียดความอยุติธรรมและการดูถูก</textarea>
+        </div>
+
+        <!-- World Lore -->
+        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[140px]">
+          <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center justify-between">
+            <span><i class="fa-solid fa-earth-americas mr-1"></i> ข้อมูลโลก & แคมเปญ (Lore)</span>
+            <span class="text-[10px] text-slate-400">กรอบเนื้อเรื่อง</span>
+          </span>
+          <textarea id="worldLore" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="กรอบเนื้อเรื่องโลก...">แคมเปญ: The Gilded Pride of Silvermist (ดินแดนหุบเขาซิลเวอร์มิสต์ ถูกปกคลุมด้วยสายหมอกเวทมนตร์ มีซากอารยธรรมจักรวรรดิเก่า มีพวกสลัดหมอกออกปล้นสะดม และมีอันตรายจากสัตว์อสูรสายหมอก)</textarea>
+        </div>
+      </div>
+
     </aside>
 
-    <!-- Narrative Stream -->
+    <!-- Narrative Stream (Right Column on PC, Tab 2 on Mobile) -->
     <section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10">
       
       <!-- Dialogue Stream -->
@@ -150,25 +175,29 @@
         <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
           <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
           <div class="text-xs sm:text-sm leading-relaxed text-slate-200">
-            ยินดีต้อนรับสู่โลก DnD! ระบบนี้ใช้กฎการทอยเต๋าจริงของ DnD 5e ทุกการกระทำที่ท้าทาย DM จะแจ้งค่า <strong>DC (ความยาก)</strong> และชนิดเต๋าที่ต้องทอยเสมอ เมื่อเลือกการกระทำแล้ว ให้ทอยเต๋าเพื่อดูว่าสำเร็จหรือล้มเหลวครับ!
+            ยินดีต้อนรับสู่แคมเปญ Solo DnD! โลกและบุคลิกของตัวละครถูกตรึงไว้กับระบบเรียบร้อย คุณสามารถ **คลิกชอยส์** ที่ DM เสนอ หรือ **พิมพ์การกระทำอิสระตามจินตนาการของคุณเอง** แล้ว DM จะประเมินค่า DC ให้ทอยเต๋าตัดสินผลทันทีครับ!
           </div>
         </div>
       </div>
 
-      <!-- Quick Action Deck -->
+      <!-- Quick Action Deck (Adaptive Flex on PC / Scroll on Mobile) -->
       <div class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80">
-        <div class="max-w-4xl mx-auto flex gap-1.5 overflow-x-auto md:grid md:grid-cols-4 chat-scroll">
-          <button onclick="triggerQuickAction('ฉันขอสำรวจพื้นที่รอบตัวอย่างละเอียด เพื่อหาเบาะแสหรือภัยอันตราย')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🔍 สำรวจรอบตัว (Perception)
+        <div class="max-w-4xl mx-auto flex gap-2 overflow-x-auto md:grid md:grid-cols-4 chat-scroll">
+          <button onclick="triggerQuickAction('ฉันขอตรวจสอบพื้นที่รอบตัวอย่างละเอียด เพื่อหาเบาะแส ร่องรอย หรือกลิ่นอายเวทมนตร์')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-magnifying-glass text-sky-400"></i>
+            <span>สำรวจพื้นที่ (Check)</span>
           </button>
-          <button onclick="triggerQuickAction('ฉันพยายามย่องและซ่อนตัวไม่ให้ใครสังเกตเห็น')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🤫 ย่องเงียบ (Stealth)
+          <button onclick="usePrideAdvantage()" class="bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/50 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition font-semibold flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-crown text-amber-400"></i>
+            <span>ใช้ Pride (Advantage)</span>
           </button>
-          <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือก 2-3 ข้อพร้อมระบุค่า DC และเต๋าที่ต้องทอยสำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            💡 ขอช้อยส์ + ค่า DC
+          <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือก 2-3 ข้อตามกฎ DnD พร้อมระบุค่า DC ที่ต้องทอยสำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i>
+            <span>ขอช้อยส์ + ค่า DC</span>
           </button>
-          <button onclick="triggerQuickAction('ฉันชักอาวุธขึ้นมาตั้งท่าเตรียมรับการโจมตีหรือป้องกันตัว')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🛡️ ระวังภัย / เตรียมสู้
+          <button onclick="triggerQuickAction('ฉันตั้งท่าชักดาบเรเปียร์เตรียมพร้อมต่อสู้ ท้าทายศัตรูอย่างสง่างาม')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-rose-400"></i>
+            <span>ตั้งท่าต่อสู้ (Combat)</span>
           </button>
         </div>
       </div>
@@ -176,10 +205,10 @@
       <!-- Action Console -->
       <div class="p-3 bg-slate-900 border-t border-slate-800 flex-shrink-0">
         <div class="max-w-4xl mx-auto flex gap-2 items-center">
-          <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำ หรือทอยเต๋าตามที่ DM สั่ง..."
+          <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำอิสระตามจินตนาการของคุณ... (Enter เพื่อส่ง)"
                     class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 resize-none chat-scroll"
                     onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); sendAction(); }"></textarea>
-          <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 flex-shrink-0">
+          <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 flex-shrink-0 shadow">
             <span>ส่ง</span>
             <i class="fa-solid fa-paper-plane text-xs"></i>
           </button>
@@ -188,15 +217,15 @@
 
     </section>
 
-    <!-- Mobile Dice Modal -->
-    <div id="dicePane" class="fixed inset-x-4 top-24 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-2xl hidden md:hidden flex-col gap-2.5 w-auto">
+    <!-- Mobile Dice Modal (Floating on Mobile Only) -->
+    <div id="dicePane" class="fixed inset-x-4 top-20 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-2xl hidden md:hidden flex-col gap-2.5 w-auto">
       <div class="flex justify-between items-center pb-1 border-b border-slate-800">
-        <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> กล่องทอยเต๋า (Dice Roller)</span>
+        <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> กล่องทอยเต๋า (Mobile Roller)</span>
         <button onclick="toggleDicePane()" class="text-slate-400 hover:text-slate-200 text-sm px-1.5">&times;</button>
       </div>
       <div class="flex items-center gap-1.5">
         <select id="diceTypeMobile" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
-          <option value="20" selected>d20 (ตรวจค่าพลัง/โจมตี)</option>
+          <option value="20" selected>d20 (ตรวจทักษะ / โจมตี)</option>
           <option value="4">d4</option>
           <option value="6">d6</option>
           <option value="8">d8</option>
@@ -204,11 +233,11 @@
           <option value="12">d12</option>
         </select>
         <input type="number" id="diceModMobile" value="2" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
-        <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
+        <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer select-none">
           <input type="checkbox" id="advCheckMobile" class="accent-amber-500 rounded"> Adv
         </label>
       </div>
-      <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition">
+      <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition shadow">
         🎲 ทอยเต๋าเดี๋ยวนี้
       </button>
       <div id="diceOutputMobile" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
@@ -224,7 +253,7 @@
     </button>
     <button onclick="switchMobileTab('char')" id="tabCharBtn" class="flex flex-col items-center text-slate-400 text-xs gap-0.5">
       <i class="fa-solid fa-user-shield text-base"></i>
-      <span>ตัวละคร</span>
+      <span>ตัวละคร / Lore</span>
     </button>
     <button onclick="toggleDicePane()" class="flex flex-col items-center text-amber-400 text-xs gap-0.5">
       <i class="fa-solid fa-dice-d20 text-base"></i>
@@ -237,7 +266,7 @@
     <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 shadow-2xl text-xs">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <h3 class="font-bold text-amber-400 flex items-center gap-1.5">
-          <i class="fa-solid fa-gear"></i> ตั้งค่า API & การเล่น
+          <i class="fa-solid fa-gear"></i> ตั้งค่า API & ระบบเกม
         </h3>
         <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-slate-100 text-sm px-1">&times;</button>
       </div>
@@ -266,6 +295,7 @@
     let chatHistory = [];
     const MAX_HISTORY_TURNS = 8;
 
+    // Mobile Navigation Handling
     window.switchMobileTab = (tab) => {
       const charPane = document.getElementById("characterPane");
       const storyPane = document.getElementById("storyPane");
@@ -282,6 +312,30 @@
         storyPane.classList.remove("hidden");
         tabStoryBtn.className = "flex flex-col items-center text-amber-400 text-xs gap-0.5";
         tabCharBtn.className = "flex flex-col items-center text-slate-400 text-xs gap-0.5";
+      }
+    };
+
+    // Sidebar Sub-Tab Switcher (จัดการหน้าจอ PC ให้พอดี)
+    window.switchSidebarSubTab = (subTab) => {
+      const statsPane = document.getElementById("subTabStatsPane");
+      const lorePane = document.getElementById("subTabLorePane");
+      const btnStats = document.getElementById("subTabStatsBtn");
+      const btnLore = document.getElementById("subTabLoreBtn");
+
+      if (subTab === 'lore') {
+        statsPane.classList.add("hidden");
+        statsPane.classList.remove("flex");
+        lorePane.classList.remove("hidden");
+        lorePane.classList.add("flex");
+        btnLore.className = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold transition";
+        btnStats.className = "flex-1 py-1 rounded text-slate-400 hover:text-slate-200 transition";
+      } else {
+        lorePane.classList.add("hidden");
+        lorePane.classList.remove("flex");
+        statsPane.classList.remove("hidden");
+        statsPane.classList.add("flex");
+        btnStats.className = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold transition";
+        btnLore.className = "flex-1 py-1 rounded text-slate-400 hover:text-slate-200 transition";
       }
     };
 
@@ -367,6 +421,34 @@
       triggerQuickAction(`ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)`);
     };
 
+    // ใช้แต้ม Pride เพื่อขอ Advantage (รองรับทั้ง PC และ Mobile อย่างแม่นยำ)
+    window.usePrideAdvantage = () => {
+      let pride = parseInt(document.getElementById("charPride").value) || 0;
+      if (pride <= 0) {
+        alert("คุณไม่มีแต้ม Pride เหลือแล้ว (ต้อง Long Rest เพื่อฟื้นฟู)");
+        return;
+      }
+      pride -= 1;
+      document.getElementById("charPride").value = pride;
+      saveSheet();
+      
+      document.getElementById("advCheckPC").checked = true;
+      document.getElementById("advCheckMobile").checked = true;
+      appendMessage("System", `ใช้แต้ม Pride! (เหลือ ${pride}) การทอยเต๋าครั้งถัดไปจะได้รับ Advantage (ทอย 2 ลูกเลือกแต้มสูงสุด)`, "system");
+      
+      // บน PC ไฮไลต์การ์ดทอยเต๋า / บนมือถือเปิดกล่องทอย
+      if (window.innerWidth >= 768) {
+        switchSidebarSubTab('stats');
+        const pcCard = document.getElementById("pcDiceCard");
+        pcCard.classList.add("ring-2", "ring-amber-400");
+        setTimeout(() => pcCard.classList.remove("ring-2", "ring-amber-400"), 1200);
+      } else {
+        const pane = document.getElementById("dicePane");
+        pane.classList.remove("hidden");
+        pane.classList.add("flex");
+      }
+    };
+
     // Unified Dice Roller
     window.executeRoll = (device) => {
       const suffix = device === 'PC' ? 'PC' : 'Mobile';
@@ -383,6 +465,9 @@
         let chosen = Math.max(r1, r2);
         total = chosen + mod;
         desc = `Adv [${r1}, ${r2}] -> ${chosen}`;
+        // รีเซ็ต Adv ทั้งสองอุปกรณ์
+        document.getElementById("advCheckPC").checked = false;
+        document.getElementById("advCheckMobile").checked = false;
       }
 
       let critNotice = "";
@@ -401,19 +486,26 @@
       if (device === 'Mobile') {
         switchMobileTab('story');
         toggleDicePane();
+      } else {
+        input.focus();
       }
     };
 
-    // Helper: เมื่อผู้เล่นแตะชอยส์ที่ DM ให้มา
+    // เมื่อผู้เล่นแตะชอยส์ที่ DM ให้มา
     window.selectChoice = (choiceText) => {
       const input = document.getElementById("playerInput");
       input.value = `ฉันเลือก: ${choiceText}`;
-      // ถ้าชอยส์มีการระบุให้ทอยเต๋า ให้เปิดกล่องเต๋าขึ้นมาพร้อมบวก mod
+      
       if (choiceText.includes("DC") || choiceText.includes("d20") || choiceText.includes("ทอย")) {
         if (window.innerWidth < 768) {
           const pane = document.getElementById("dicePane");
           pane.classList.remove("hidden");
           pane.classList.add("flex");
+        } else {
+          switchSidebarSubTab('stats');
+          const pcCard = document.getElementById("pcDiceCard");
+          pcCard.classList.add("ring-2", "ring-amber-400");
+          setTimeout(() => pcCard.classList.remove("ring-2", "ring-amber-400"), 1200);
         }
       } else {
         sendAction();
@@ -428,6 +520,8 @@
       const data = {
         name: document.getElementById("charName").value,
         class: document.getElementById("charClass").value,
+        personality: document.getElementById("charPersonality").value,
+        lore: document.getElementById("worldLore").value,
         hp: document.getElementById("currentHp").value,
         maxHp: document.getElementById("maxHp").value,
         ac: document.getElementById("charAc").value,
@@ -437,19 +531,21 @@
         party: document.getElementById("charParty").value
       };
       try {
-        localStorage.setItem("DND_SHEET_DATA", JSON.stringify(data));
+        localStorage.setItem("DND_SHEET_DATA_V2", JSON.stringify(data));
       } catch(e) {
         console.warn("Local storage write failed", e);
       }
     };
 
     function loadSavedSheet() {
-      const saved = localStorage.getItem("DND_SHEET_DATA");
+      const saved = localStorage.getItem("DND_SHEET_DATA_V2");
       if (saved) {
         try {
           const d = JSON.parse(saved);
           if (d.name) document.getElementById("charName").value = d.name;
           if (d.class) document.getElementById("charClass").value = d.class;
+          if (d.personality) document.getElementById("charPersonality").value = d.personality;
+          if (d.lore) document.getElementById("worldLore").value = d.lore;
           if (d.hp) document.getElementById("currentHp").value = d.hp;
           if (d.maxHp) document.getElementById("maxHp").value = d.maxHp;
           if (d.ac) document.getElementById("charAc").value = d.ac;
@@ -511,7 +607,7 @@
       return response;
     }
 
-    // Direct REST API with Dice-First Mechanics
+    // Direct REST API with Lore & Freeform Creativity Support
     async function sendDirectAction(text) {
       if (!apiKey) {
         toggleSettingsModal();
@@ -526,7 +622,10 @@
 
       try {
         const currentModel = savedModel || "gemini-3.5-flash-lite";
-        const charSnapshot = `[ตัวละคร: ${document.getElementById("charName").value} | ${document.getElementById("charClass").value} | HP: ${document.getElementById("currentHp").value}/${document.getElementById("maxHp").value} | AC: ${document.getElementById("charAc").value} | ไอเทม: ${document.getElementById("charInventory").value.replace(/\n/g, ', ')} | ปาร์ตี้: ${document.getElementById("charParty").value.replace(/\n/g, ', ')}]`;
+        
+        const charSnapshot = `[ตัวละคร: ${document.getElementById("charName").value} | คลาส: ${document.getElementById("charClass").value} | HP: ${document.getElementById("currentHp").value}/${document.getElementById("maxHp").value} | AC: ${document.getElementById("charAc").value} | ไอเทม: ${document.getElementById("charInventory").value.replace(/\n/g, ', ')} | ปาร์ตี้: ${document.getElementById("charParty").value.replace(/\n/g, ', ')}]
+[บุคลิก/อุปนิสัย: ${document.getElementById("charPersonality").value}]
+[กรอบเนื้อเรื่องโลก/Lore: ${document.getElementById("worldLore").value}]`;
 
         if (chatHistory.length > MAX_HISTORY_TURNS * 2) {
           chatHistory = chatHistory.slice(-MAX_HISTORY_TURNS * 2);
@@ -534,22 +633,23 @@
 
         chatHistory.push({ role: "user", parts: [{ text: `${charSnapshot}\n\nคำสั่ง/การกระทำของผู้เล่น: ${text}` }] });
 
-        // กฎเหล็กของ DM เรื่องการบังคับทอยเต๋าตามกฎ DnD 5e
-        const systemInstruction = `คุณคือ Dungeon Master (DM) ที่เคร่งครัดตามกฎ DnD 5e Solo
-กฎเหล็กสำคัญที่สุด (DICE CHECK & DC):
-1. **อย่าตัดสินผลสำเร็จล่วงหน้าเด็ดขาด** หากผู้เล่นทำสิ่งที่มีความเสี่ยง, การต่อสู้, ใช้ทักษะ (เช่น ย่องเบา, เจรจา, ปลดกับดัก, ปีนป่าย) คุณต้อง "หยุดและสั่งให้ผู้เล่นทอยเต๋า" พร้อมระบุค่า DC ให้ชัดเจนเสมอ เช่น:
-   - "กรุณาทอย d20 + Stealth (DC 13) เพื่อดูว่าหลบพ้นสายตายามหรือไม่!"
-   - "กรุณาทอย d20 + Athletics (DC 14) เพื่องัดบานประตู!"
-2. **หากผู้เล่นส่ง [ผลทอยเต๋า: ...] มาด้วย:**
-   - ให้นำแต้มรวมไปเทียบกับค่า DC
-   - แต้ม >= DC = สำเร็จอย่างงดงาม บรรยายผลดี
-   - แต้ม < DC = ล้มเหลว เกิดผลเสีย อาจเสียเลือด (HP ลด) หรือศัตรูรู้ตัว
-   - Critical Success (แต้ม 20 บนลูกเต๋า) = สำเร็จเกินคาด มีโบนัสพิเศษ
-   - Critical Fail (แต้ม 1 บนลูกเต๋า) = หายนะอย่างตลกหรือเจ็บตัว
-3. **การเสนอชอยส์ (Choices):** ท้ายคำบรรยาย ให้เสนอทางเลือก 2-3 ข้อ โดยในแต่ละชอยส์ **ต้องระบุประเภทการทอยและค่า DC ล่วงหน้าเสมอ** ในรูปแบบ:
+        const systemInstruction = `คุณคือ Dungeon Master (DM) มืออาชีพสำหรับ DnD 5e Solo Tabletop RPG
+หน้าที่สำคัญที่สุดของคุณ:
+1. **คุมกรอบเนื้อเรื่องตาม Lore และบุคลิกตัวละคร:** 
+   - ดำเนินเรื่องให้อยู่ในกรอบ [กรอบเนื้อเรื่องโลก/Lore] เสมอ ห้ามแต่งหลุดโลก
+   - ให้ NPC และสถานการณ์ตอบสนองต่อ [บุคลิก/อุปนิสัย] ของตัวละครอย่างสมจริง
+2. **รองรับการกระทำอิสระของผู้เล่น (Player Freedom & Agency):**
+   - ผู้เล่นไม่จำเป็นต้องเลือกชอยส์ที่คุณเสนอ หากผู้เล่นพิมพ์การกระทำหรือแผนการแปลกใหม่ด้วยตัวเอง ให้คุณประเมินความเป็นไปได้ตามกฎ DnD
+   - หากการกระทำมีความเสี่ยง ท้าทาย หรือเป็นการต่อสู้ **ห้ามสรุปผลสำเร็จทันทีเด็ดขาด** ให้คุณหยุดและสั่งให้ผู้เล่นทอยเต๋าพร้อมตั้งค่า DC (หรือ AC ศัตรู) เช่น "กรุณาทอย d20 + Athletics (DC 14) เพื่องัดบานหน้าต่าง!"
+3. **การประเมินผลทอยเต๋า ([ผลทอยเต๋า: ...]):**
+   - แต้ม >= DC: สำเร็จ บรรยายผลลัพธ์ที่ดี
+   - แต้ม < DC: ล้มเหลว เกิดผลเสีย อาจโดนโจมตีสวน (HP ลด) หรือศัตรูไหวตัวทัน
+   - Critical Success (20 แท้): สำเร็จเกินคาด มีแต้มต่อพิเศษ
+   - Critical Fail (1 แท้): ความล้มเหลวขั้นวิกฤต หรือเสียจังหวะ
+4. **รูปแบบการเสนอชอยส์:** ท้ายการบรรยาย ให้เสนอทางเลือก 2-3 ข้อ โดยต้องระบุค่า DC ล่วงหน้าเสมอในรูปแบบ:
    - [ชอยส์ 1]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
    - [ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
-4. การอัปเดตสเตตัส: หากมีการเสียเลือดหรือได้ของ ให้ใส่ JSON ท้ายคำตอบ:
+5. **การอัปเดตสเตตัส:** หาก HP เปลี่ยน หรือได้ไอเทม ให้ใส่แท็ก JSON ท้ายคำตอบ:
    <<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>`;
 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
@@ -573,7 +673,6 @@
 
         let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "DM นิ่งเงียบไป...";
 
-        // JSON Sanitizer & Status Sync
         const syncMatch = reply.match(/<<<STATUS_SYNC:\s*([\s\S]*?)>>>/);
         if (syncMatch) {
           try {
@@ -609,7 +708,6 @@
       }
     }
 
-    // Interactive Narrative Formatter: แปลงชอยส์ของ DM ให้กลายเป็นปุ่มคลิกได้
     function appendMessage(sender, text, type) {
       const box = document.getElementById("narrativeBox");
       const msgDiv = document.createElement("div");
@@ -620,10 +718,9 @@
       } else if (type === "dm") {
         msgDiv.className = "bg-slate-900 border-l-4 border-amber-500 p-3 sm:p-4 rounded-r-lg max-w-[95%] shadow text-xs";
         
-        // แยกข้อความชอยส์ออกมาทำเป็นปุ่มกด
         let formattedText = text.replace(/\[ชอยส์\s*\d+\]:\s*([^\n]+)/g, (match, p1) => {
           const cleanChoice = p1.replace(/"/g, '&quot;');
-          return `<button onclick="selectChoice('${cleanChoice}')" class="choice-btn text-left w-full my-1 p-2 bg-slate-950/70 border border-amber-500/30 rounded-lg text-amber-300 transition flex items-center justify-between"><span>👉 ${p1}</span><i class="fa-solid fa-dice-d20 text-amber-400 text-sm ml-2"></i></button>`;
+          return `<button onclick="selectChoice('${cleanChoice}')" class="choice-btn text-left w-full my-1.5 p-2.5 bg-slate-950/80 border border-amber-500/40 rounded-lg text-amber-300 transition flex items-center justify-between shadow-sm"><span>👉 ${p1}</span><i class="fa-solid fa-dice-d20 text-amber-400 text-sm ml-2"></i></button>`;
         });
 
         msgDiv.innerHTML = `<p class="font-bold text-amber-300 text-[10px] mb-1.5 flex items-center gap-1"><i class="fa-solid fa-dungeon"></i> ${sender}</p><div class="text-slate-200 whitespace-pre-wrap leading-relaxed">${formattedText}</div>`;
