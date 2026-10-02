@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Solo DnD Engine - Verified Stable</title>
+  <title>Solo DnD Engine - DnD Dice Mechanics Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -12,6 +12,7 @@
     .chat-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     .editable { background: transparent; border-bottom: 1px dashed #475569; outline: none; }
     .editable:focus { border-bottom-color: #f59e0b; background: rgba(51, 65, 85, 0.4); }
+    .choice-btn:hover { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.1); }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
@@ -24,7 +25,6 @@
     </div>
     
     <div class="flex items-center gap-2">
-      <!-- Fast Rest Actions on Desktop -->
       <button onclick="takeShortRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1 rounded-lg text-xs transition items-center gap-1.5">
         <i class="fa-solid fa-mug-hot"></i> Short Rest
       </button>
@@ -42,7 +42,7 @@
   <!-- Main Viewport Area -->
   <main class="flex-1 flex overflow-hidden relative">
     
-    <!-- Left Column: Character Sheet (Tab 1 on Mobile, Left on PC) -->
+    <!-- Left Column: Character Sheet -->
     <aside id="characterPane" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900 md:bg-slate-900/90 border-r border-slate-800 flex flex-col p-3.5 gap-3 overflow-y-auto chat-scroll absolute md:static inset-0 z-20 hidden md:flex">
       
       <!-- Character Identity Card -->
@@ -100,31 +100,31 @@
         </button>
       </div>
 
-      <!-- Desktop Embedded Dice Deck -->
+      <!-- PC Embedded Dice Deck -->
       <div class="hidden md:flex flex-col bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 gap-1.5">
         <div class="flex justify-between items-center text-xs">
-          <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Dice Tool (PC)</span>
+          <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">🎲 Dice Tool (PC)</span>
           <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
         </div>
         <div class="flex items-center gap-1.5">
           <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
-            <option value="20">d20</option>
+            <option value="20" selected>d20 (Skill/Attack)</option>
             <option value="4">d4</option>
             <option value="6">d6</option>
             <option value="8">d8</option>
             <option value="10">d10</option>
             <option value="12">d12</option>
           </select>
-          <input type="number" id="diceModPC" value="0" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+0">
+          <input type="number" id="diceModPC" value="2" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
           <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
             <input type="checkbox" id="advCheckPC" class="accent-amber-500 rounded"> Adv
           </label>
-          <button onclick="executeRoll('PC')" class="flex-1 bg-indigo-600 hover:bg-indigo-500 font-bold py-1 rounded text-xs transition">ทอยลูกเต๋า</button>
+          <button onclick="executeRoll('PC')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1 rounded text-xs transition">ทอยเต๋า</button>
         </div>
       </div>
 
       <!-- Inventory & Companions -->
-      <div class="flex-1 flex flex-col gap-2.5 min-h-[220px]">
+      <div class="flex-1 flex flex-col gap-2.5 min-h-[200px]">
         <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1">
           <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center gap-1.5">
             <i class="fa-solid fa-briefcase"></i> กระเป๋าไอเทม & ยุทโธปกรณ์
@@ -142,7 +142,7 @@
 
     </aside>
 
-    <!-- Narrative Stream (Tab 2 on Mobile, Right on PC) -->
+    <!-- Narrative Stream -->
     <section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10">
       
       <!-- Dialogue Stream -->
@@ -150,25 +150,25 @@
         <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
           <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
           <div class="text-xs sm:text-sm leading-relaxed text-slate-200">
-            ยินดีต้อนรับ! สามารถดูสเตตัสทางฝั่งซ้าย (หรือแท็บ "ตัวละคร" บนมือถือ) พิมพ์การกระทำของคุณ หรือเลือก Quick Actions ด้านล่างเพื่อเริ่มการเดินทางได้เลยครับ
+            ยินดีต้อนรับสู่โลก DnD! ระบบนี้ใช้กฎการทอยเต๋าจริงของ DnD 5e ทุกการกระทำที่ท้าทาย DM จะแจ้งค่า <strong>DC (ความยาก)</strong> และชนิดเต๋าที่ต้องทอยเสมอ เมื่อเลือกการกระทำแล้ว ให้ทอยเต๋าเพื่อดูว่าสำเร็จหรือล้มเหลวครับ!
           </div>
         </div>
       </div>
 
-      <!-- Quick Action Deck (Adaptive PC/Mobile) -->
+      <!-- Quick Action Deck -->
       <div class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80">
         <div class="max-w-4xl mx-auto flex gap-1.5 overflow-x-auto md:grid md:grid-cols-4 chat-scroll">
-          <button onclick="triggerQuickAction('ฉันสำรวจและตรวจสอบสภาพแวดล้อมรอบตัวอย่างละเอียด (Perception)')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🔍 สำรวจรอบตัว
+          <button onclick="triggerQuickAction('ฉันขอสำรวจพื้นที่รอบตัวอย่างละเอียด เพื่อหาเบาะแสหรือภัยอันตราย')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            🔍 สำรวจรอบตัว (Perception)
           </button>
-          <button onclick="triggerQuickAction('ฉันพยายามพรางตัวและเคลื่อนไหวอย่างเงียบเชียบที่สุด (Stealth)')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🤫 ย่องเงียบ
+          <button onclick="triggerQuickAction('ฉันพยายามย่องและซ่อนตัวไม่ให้ใครสังเกตเห็น')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            🤫 ย่องเงียบ (Stealth)
           </button>
-          <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือกหรือเบาะแสที่เป็นไปได้สำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            💡 ขอช้อยส์
+          <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือก 2-3 ข้อพร้อมระบุค่า DC และเต๋าที่ต้องทอยสำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            💡 ขอช้อยส์ + ค่า DC
           </button>
-          <button onclick="triggerQuickAction('ฉันตั้งท่าระวังภัย ตรวจสอบว่ามีศัตรูซุ่มโจมตีหรือไม่')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🛡️️ ระวังภัย
+          <button onclick="triggerQuickAction('ฉันชักอาวุธขึ้นมาตั้งท่าเตรียมรับการโจมตีหรือป้องกันตัว')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            🛡️ ระวังภัย / เตรียมสู้
           </button>
         </div>
       </div>
@@ -176,7 +176,7 @@
       <!-- Action Console -->
       <div class="p-3 bg-slate-900 border-t border-slate-800 flex-shrink-0">
         <div class="max-w-4xl mx-auto flex gap-2 items-center">
-          <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำของคุณ... (กด Enter เพื่อส่ง)"
+          <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำ หรือทอยเต๋าตามที่ DM สั่ง..."
                     class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 resize-none chat-scroll"
                     onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); sendAction(); }"></textarea>
           <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 flex-shrink-0">
@@ -188,27 +188,29 @@
 
     </section>
 
-    <!-- Mobile Dice Modal (Floating on Mobile) -->
+    <!-- Mobile Dice Modal -->
     <div id="dicePane" class="fixed inset-x-4 top-24 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-2xl hidden md:hidden flex-col gap-2.5 w-auto">
       <div class="flex justify-between items-center pb-1 border-b border-slate-800">
-        <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> Dice Tool</span>
+        <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> กล่องทอยเต๋า (Dice Roller)</span>
         <button onclick="toggleDicePane()" class="text-slate-400 hover:text-slate-200 text-sm px-1.5">&times;</button>
       </div>
       <div class="flex items-center gap-1.5">
         <select id="diceTypeMobile" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
-          <option value="20">d20</option>
+          <option value="20" selected>d20 (ตรวจค่าพลัง/โจมตี)</option>
           <option value="4">d4</option>
           <option value="6">d6</option>
           <option value="8">d8</option>
           <option value="10">d10</option>
           <option value="12">d12</option>
         </select>
-        <input type="number" id="diceModMobile" value="0" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+0">
+        <input type="number" id="diceModMobile" value="2" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
         <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
           <input type="checkbox" id="advCheckMobile" class="accent-amber-500 rounded"> Adv
         </label>
       </div>
-      <button onclick="executeRoll('Mobile')" class="bg-indigo-600 hover:bg-indigo-500 font-bold py-1.5 rounded-lg text-xs transition">ทอยลูกเต๋า</button>
+      <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition">
+        🎲 ทอยเต๋าเดี๋ยวนี้
+      </button>
       <div id="diceOutputMobile" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
     </div>
 
@@ -224,7 +226,7 @@
       <i class="fa-solid fa-user-shield text-base"></i>
       <span>ตัวละคร</span>
     </button>
-    <button onclick="toggleDicePane()" class="flex flex-col items-center text-slate-400 text-xs gap-0.5">
+    <button onclick="toggleDicePane()" class="flex flex-col items-center text-amber-400 text-xs gap-0.5">
       <i class="fa-solid fa-dice-d20 text-base"></i>
       <span>ทอยเต๋า</span>
     </button>
@@ -244,7 +246,7 @@
         <input type="password" id="apiKeyInputModal" placeholder="วาง API Key ที่นี่" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 focus:border-amber-500 outline-none">
       </div>
       <div>
-        <label class="block text-slate-400 mb-1">โมเดล AI (ระบบตรวจยืนยันแล้ว):</label>
+        <label class="block text-slate-400 mb-1">โมเดล AI:</label>
         <select id="modelSelector" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 outline-none">
           <option value="gemini-3.5-flash-lite" selected>3.5 Flash-Lite (คำตอบเร็วสุด / เสถียร)</option>
           <option value="gemini-3.8-flash">3.8 Flash (ความช่วยเหลือรอบด้าน)</option>
@@ -262,9 +264,8 @@
     let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
     let savedModel = localStorage.getItem("SOLO_DND_MODEL") || "gemini-3.5-flash-lite";
     let chatHistory = [];
-    const MAX_HISTORY_TURNS = 6;
+    const MAX_HISTORY_TURNS = 8;
 
-    // Mobile Navigation Handling
     window.switchMobileTab = (tab) => {
       const charPane = document.getElementById("characterPane");
       const storyPane = document.getElementById("storyPane");
@@ -313,7 +314,6 @@
       toggleSettingsModal();
     };
 
-    // Auto Compress Image with Storage Guard
     window.handleAvatarCompress = (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -363,11 +363,11 @@
       document.getElementById("currentHp").value = max;
       document.getElementById("charPride").value = 2;
       saveSheet();
-      appendMessage("System", `พักผ่อนยาว (Long Rest): HP เต็ม (${max}/${max}) รีเซ็ต Pride เรียบร้อย`, "system");
+      appendMessage("System", `พักผ่อนยาว (Long Rest): HP เต็ม (${max}/${max}) รีเซ็ตแต้ม Pride เรียบร้อย`, "system");
       triggerQuickAction(`ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)`);
     };
 
-    // Unified Dice Engine
+    // Unified Dice Roller
     window.executeRoll = (device) => {
       const suffix = device === 'PC' ? 'PC' : 'Mobile';
       const sides = parseInt(document.getElementById(`diceType${suffix}`).value);
@@ -385,14 +385,38 @@
         desc = `Adv [${r1}, ${r2}] -> ${chosen}`;
       }
 
-      const resText = `${desc} ${mod >= 0 ? '+' : ''}${mod} = ${total}`;
+      let critNotice = "";
+      if (sides === 20) {
+        if (r1 === 20) critNotice = " 🔥 CRITICAL SUCCESS (20 ธรรมชาติ)!";
+        else if (r1 === 1) critNotice = " 💀 CRITICAL FAIL (1 ธรรมชาติ)!";
+      }
+
+      const resText = `${desc} ${mod >= 0 ? '+' : ''}${mod} = ${total}${critNotice}`;
       document.getElementById(`diceOutput${suffix}`).innerText = resText;
 
       const input = document.getElementById("playerInput");
-      input.value = `[ทอยเต๋า: ${resText}] ` + input.value;
+      const currentAction = input.value.replace(/\[ผลทอยเต๋า:.*?\]\s*/g, '').trim();
+      input.value = `[ผลทอยเต๋า: ${resText}] ${currentAction}`;
+      
       if (device === 'Mobile') {
         switchMobileTab('story');
         toggleDicePane();
+      }
+    };
+
+    // Helper: เมื่อผู้เล่นแตะชอยส์ที่ DM ให้มา
+    window.selectChoice = (choiceText) => {
+      const input = document.getElementById("playerInput");
+      input.value = `ฉันเลือก: ${choiceText}`;
+      // ถ้าชอยส์มีการระบุให้ทอยเต๋า ให้เปิดกล่องเต๋าขึ้นมาพร้อมบวก mod
+      if (choiceText.includes("DC") || choiceText.includes("d20") || choiceText.includes("ทอย")) {
+        if (window.innerWidth < 768) {
+          const pane = document.getElementById("dicePane");
+          pane.classList.remove("hidden");
+          pane.classList.add("flex");
+        }
+      } else {
+        sendAction();
       }
     };
 
@@ -469,7 +493,6 @@
       sendDirectAction(text);
     };
 
-    // Helper call function with 1-time Auto-Retry on High Demand
     async function executeApiCall(url, body) {
       let response = await fetch(url, {
         method: "POST",
@@ -477,7 +500,6 @@
         body: JSON.stringify(body)
       });
 
-      // If high demand (503) or rate limit, wait 1.5s and retry once
       if (response.status === 503 || response.status === 429) {
         await new Promise(r => setTimeout(r, 1500));
         response = await fetch(url, {
@@ -489,7 +511,7 @@
       return response;
     }
 
-    // Direct REST API Core
+    // Direct REST API with Dice-First Mechanics
     async function sendDirectAction(text) {
       if (!apiKey) {
         toggleSettingsModal();
@@ -512,12 +534,23 @@
 
         chatHistory.push({ role: "user", parts: [{ text: `${charSnapshot}\n\nคำสั่ง/การกระทำของผู้เล่น: ${text}` }] });
 
-        const systemInstruction = `คุณคือ Dungeon Master (DM) มืออาชีพสำหรับ DnD 5e Solo
-กฎสำคัญ:
-1. ตอบกระชับ ตื่นเต้น คลี่คลายเหตุการณ์ตามกฎ DnD
-2. หากมีการเปลี่ยนแปลงเลือด ได้รับไอเทม หรือมี NPC เข้าร่วม ให้ใส่แท็ก JSON ไว้ท้ายคำตอบเสมอในรูปแบบ:
-<<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>
-3. ให้ทางเลือก 2-3 ข้อสั้นๆ ท้ายคำตอบเสมอ`;
+        // กฎเหล็กของ DM เรื่องการบังคับทอยเต๋าตามกฎ DnD 5e
+        const systemInstruction = `คุณคือ Dungeon Master (DM) ที่เคร่งครัดตามกฎ DnD 5e Solo
+กฎเหล็กสำคัญที่สุด (DICE CHECK & DC):
+1. **อย่าตัดสินผลสำเร็จล่วงหน้าเด็ดขาด** หากผู้เล่นทำสิ่งที่มีความเสี่ยง, การต่อสู้, ใช้ทักษะ (เช่น ย่องเบา, เจรจา, ปลดกับดัก, ปีนป่าย) คุณต้อง "หยุดและสั่งให้ผู้เล่นทอยเต๋า" พร้อมระบุค่า DC ให้ชัดเจนเสมอ เช่น:
+   - "กรุณาทอย d20 + Stealth (DC 13) เพื่อดูว่าหลบพ้นสายตายามหรือไม่!"
+   - "กรุณาทอย d20 + Athletics (DC 14) เพื่องัดบานประตู!"
+2. **หากผู้เล่นส่ง [ผลทอยเต๋า: ...] มาด้วย:**
+   - ให้นำแต้มรวมไปเทียบกับค่า DC
+   - แต้ม >= DC = สำเร็จอย่างงดงาม บรรยายผลดี
+   - แต้ม < DC = ล้มเหลว เกิดผลเสีย อาจเสียเลือด (HP ลด) หรือศัตรูรู้ตัว
+   - Critical Success (แต้ม 20 บนลูกเต๋า) = สำเร็จเกินคาด มีโบนัสพิเศษ
+   - Critical Fail (แต้ม 1 บนลูกเต๋า) = หายนะอย่างตลกหรือเจ็บตัว
+3. **การเสนอชอยส์ (Choices):** ท้ายคำบรรยาย ให้เสนอทางเลือก 2-3 ข้อ โดยในแต่ละชอยส์ **ต้องระบุประเภทการทอยและค่า DC ล่วงหน้าเสมอ** ในรูปแบบ:
+   - [ชอยส์ 1]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
+   - [ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
+4. การอัปเดตสเตตัส: หากมีการเสียเลือดหรือได้ของ ให้ใส่ JSON ท้ายคำตอบ:
+   <<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>`;
 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
 
@@ -540,7 +573,7 @@
 
         let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "DM นิ่งเงียบไป...";
 
-        // Robust Regex Matcher & JSON Sanitizer
+        // JSON Sanitizer & Status Sync
         const syncMatch = reply.match(/<<<STATUS_SYNC:\s*([\s\S]*?)>>>/);
         if (syncMatch) {
           try {
@@ -576,6 +609,7 @@
       }
     }
 
+    // Interactive Narrative Formatter: แปลงชอยส์ของ DM ให้กลายเป็นปุ่มคลิกได้
     function appendMessage(sender, text, type) {
       const box = document.getElementById("narrativeBox");
       const msgDiv = document.createElement("div");
@@ -584,8 +618,15 @@
         msgDiv.className = "bg-slate-800 self-end p-2.5 sm:p-3 rounded-l-lg rounded-tr-lg max-w-[85%] border border-slate-700 shadow text-xs";
         msgDiv.innerHTML = `<p class="font-bold text-amber-400 text-[10px] mb-0.5 text-right">${sender}</p><div class="text-slate-100 whitespace-pre-wrap">${text}</div>`;
       } else if (type === "dm") {
-        msgDiv.className = "bg-slate-900 border-l-4 border-amber-500 p-2.5 sm:p-3 rounded-r-lg max-w-[95%] shadow text-xs";
-        msgDiv.innerHTML = `<p class="font-bold text-amber-300 text-[10px] mb-0.5"><i class="fa-solid fa-dungeon mr-1"></i>${sender}</p><div class="text-slate-200 whitespace-pre-wrap leading-relaxed">${text}</div>`;
+        msgDiv.className = "bg-slate-900 border-l-4 border-amber-500 p-3 sm:p-4 rounded-r-lg max-w-[95%] shadow text-xs";
+        
+        // แยกข้อความชอยส์ออกมาทำเป็นปุ่มกด
+        let formattedText = text.replace(/\[ชอยส์\s*\d+\]:\s*([^\n]+)/g, (match, p1) => {
+          const cleanChoice = p1.replace(/"/g, '&quot;');
+          return `<button onclick="selectChoice('${cleanChoice}')" class="choice-btn text-left w-full my-1 p-2 bg-slate-950/70 border border-amber-500/30 rounded-lg text-amber-300 transition flex items-center justify-between"><span>👉 ${p1}</span><i class="fa-solid fa-dice-d20 text-amber-400 text-sm ml-2"></i></button>`;
+        });
+
+        msgDiv.innerHTML = `<p class="font-bold text-amber-300 text-[10px] mb-1.5 flex items-center gap-1"><i class="fa-solid fa-dungeon"></i> ${sender}</p><div class="text-slate-200 whitespace-pre-wrap leading-relaxed">${formattedText}</div>`;
       } else {
         msgDiv.className = "bg-slate-900/90 border border-indigo-500/40 p-2 rounded text-indigo-200 text-xs";
         msgDiv.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> ${text}`;
