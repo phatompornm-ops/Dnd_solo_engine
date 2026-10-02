@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Solo DnD Engine - Mobile & PC (Fixed)</title>
+  <title>Solo DnD Engine - PC & Mobile Complete</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .chat-scroll::-webkit-scrollbar { width: 4px; }
+    .chat-scroll::-webkit-scrollbar { width: 5px; }
     .chat-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     .editable { background: transparent; border-bottom: 1px dashed #475569; outline: none; }
     .editable:focus { border-bottom-color: #f59e0b; background: rgba(51, 65, 85, 0.4); }
@@ -16,35 +16,37 @@
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
 
-  <!-- Header -->
-  <header class="bg-slate-900 border-b border-slate-800 px-3 py-2 flex justify-between items-center shadow-md flex-shrink-0">
-    <div class="flex items-center gap-2">
-      <i class="fa-solid fa-dragon text-amber-500 text-lg"></i>
-      <h1 class="font-bold text-xs sm:text-sm tracking-wide text-amber-200">Solo DnD Mobile</h1>
+  <!-- Top Header -->
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex justify-between items-center shadow-md flex-shrink-0">
+    <div class="flex items-center gap-2.5">
+      <i class="fa-solid fa-dragon text-amber-500 text-xl"></i>
+      <h1 class="font-bold text-sm sm:text-base tracking-wide text-amber-200">Solo DnD Adventure</h1>
     </div>
     
-    <div class="flex items-center gap-1.5 sm:gap-2">
-      <button onclick="takeShortRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-2 py-1 rounded text-xs transition">
-        <i class="fa-solid fa-mug-hot mr-1"></i> Short Rest
+    <div class="flex items-center gap-2">
+      <!-- Fast Rest Actions on Desktop -->
+      <button onclick="takeShortRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1 rounded-lg text-xs transition items-center gap-1.5">
+        <i class="fa-solid fa-mug-hot"></i> Short Rest
       </button>
-      <button onclick="takeLongRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-2 py-1 rounded text-xs transition">
-        <i class="fa-solid fa-bed mr-1"></i> Long Rest
+      <button onclick="takeLongRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1 rounded-lg text-xs transition items-center gap-1.5">
+        <i class="fa-solid fa-bed"></i> Long Rest
       </button>
-      <button onclick="toggleSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg text-xs border border-slate-700 flex items-center gap-1 transition">
+
+      <button onclick="toggleSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs border border-slate-700 flex items-center gap-1.5 transition">
         <i class="fa-solid fa-gear text-amber-400"></i>
-        <span class="hidden sm:inline">ตั้งค่า</span>
+        <span>ตั้งค่า API</span>
       </button>
     </div>
   </header>
 
-  <!-- Main View Area -->
+  <!-- Main Viewport Area -->
   <main class="flex-1 flex overflow-hidden relative">
     
-    <!-- Character Sheet (Tab 1 on Mobile, Left column on Desktop) -->
-    <aside id="characterPane" class="w-full md:w-88 lg:w-96 bg-slate-900 md:bg-slate-900/80 border-r border-slate-800 flex flex-col p-3 gap-2.5 overflow-y-auto chat-scroll absolute md:static inset-0 z-20 hidden md:flex">
+    <!-- Left Column: Character Sheet (Tab 1 on Mobile, Left on PC) -->
+    <aside id="characterPane" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900 md:bg-slate-900/90 border-r border-slate-800 flex flex-col p-3.5 gap-3 overflow-y-auto chat-scroll absolute md:static inset-0 z-20 hidden md:flex">
       
       <!-- Character Identity Card -->
-      <div class="bg-slate-800/80 rounded-xl p-3 border border-amber-500/20 shadow">
+      <div class="bg-slate-800/80 rounded-xl p-3.5 border border-amber-500/20 shadow">
         <div class="flex items-center gap-3">
           <div class="relative group w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-950 flex-shrink-0 cursor-pointer" onclick="document.getElementById('avatarFileInput').click()">
             <img id="charAvatar" src="" alt="Avatar" class="w-full h-full object-cover hidden">
@@ -90,19 +92,42 @@
 
       <!-- Rest Bar on Mobile view -->
       <div class="flex md:hidden gap-2">
-        <button onclick="takeShortRest()" class="flex-1 bg-slate-800 py-2 rounded text-xs text-amber-300 border border-slate-700">
+        <button onclick="takeShortRest()" class="flex-1 bg-slate-800 py-2 rounded-lg text-xs text-amber-300 border border-slate-700">
           <i class="fa-solid fa-mug-hot mr-1"></i> Short Rest
         </button>
-        <button onclick="takeLongRest()" class="flex-1 bg-slate-800 py-2 rounded text-xs text-emerald-400 border border-slate-700">
+        <button onclick="takeLongRest()" class="flex-1 bg-slate-800 py-2 rounded-lg text-xs text-emerald-400 border border-slate-700">
           <i class="fa-solid fa-bed mr-1"></i> Long Rest
         </button>
       </div>
 
+      <!-- Desktop Embedded Dice Deck -->
+      <div class="hidden md:flex flex-col bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 gap-1.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Dice Tool (PC)</span>
+          <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
+            <option value="20">d20</option>
+            <option value="4">d4</option>
+            <option value="6">d6</option>
+            <option value="8">d8</option>
+            <option value="10">d10</option>
+            <option value="12">d12</option>
+          </select>
+          <input type="number" id="diceModPC" value="0" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+0">
+          <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
+            <input type="checkbox" id="advCheckPC" class="accent-amber-500 rounded"> Adv
+          </label>
+          <button onclick="executeRoll('PC')" class="flex-1 bg-indigo-600 hover:bg-indigo-500 font-bold py-1 rounded text-xs transition">ทอยลูกเต๋า</button>
+        </div>
+      </div>
+
       <!-- Inventory & Companions -->
-      <div class="flex-1 flex flex-col gap-2 min-h-[200px]">
+      <div class="flex-1 flex flex-col gap-2.5 min-h-[220px]">
         <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1">
           <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-briefcase"></i> กระเป๋าไอเทม
+            <i class="fa-solid fa-briefcase"></i> กระเป๋าไอเทม & ยุทโธปกรณ์
           </span>
           <textarea id="charInventory" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
         </div>
@@ -117,55 +142,60 @@
 
     </aside>
 
-    <!-- Narrative Stream (Tab 2 on Mobile, Right on Desktop) -->
+    <!-- Narrative Stream (Tab 2 on Mobile, Right on PC) -->
     <section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10">
       
       <!-- Dialogue Stream -->
-      <div id="narrativeBox" class="flex-1 p-3 sm:p-4 overflow-y-auto chat-scroll flex flex-col gap-3">
-        <div class="bg-slate-900 border-l-4 border-amber-500 p-3.5 rounded-r-lg max-w-3xl shadow">
+      <div id="narrativeBox" class="flex-1 p-3.5 sm:p-5 overflow-y-auto chat-scroll flex flex-col gap-3.5 max-w-4xl mx-auto w-full">
+        <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
           <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
           <div class="text-xs sm:text-sm leading-relaxed text-slate-200">
-            ยินดีต้อนรับ! สามารถแตะแท็บ <strong>"ตัวละคร"</strong> เพื่อตรวจเช็กสเตตัส และแตะ <strong>"ทอยเต๋า"</strong> เพื่อช่วยตัดสินผลการกระทำได้ตลอดเวลา
+            ยินดีต้อนรับ! สามารถดูสเตตัสทางฝั่งซ้าย (หรือแท็บ "ตัวละคร" บนมือถือ) พิมพ์การกระทำของคุณ หรือเลือก Quick Actions ด้านล่างเพื่อเริ่มการเดินทางได้เลยครับ
           </div>
         </div>
       </div>
 
-      <!-- Quick Action Horizontal Scroller -->
-      <div class="px-2.5 py-1.5 bg-slate-900/90 border-t border-slate-800/70 overflow-x-auto whitespace-nowrap flex gap-1.5 chat-scroll">
-        <button onclick="triggerQuickAction('ฉันสำรวจและตรวจสอบสภาพแวดล้อมรอบตัวอย่างละเอียด (Perception)')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-full text-[11px] flex-shrink-0 transition">
-          🔍 สำรวจรอบตัว
-        </button>
-        <button onclick="triggerQuickAction('ฉันพยายามพรางตัวและเคลื่อนไหวอย่างเงียบเชียบที่สุด (Stealth)')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-full text-[11px] flex-shrink-0 transition">
-          🤫 ย่องเงียบ
-        </button>
-        <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือกหรือเบาะแสที่เป็นไปได้สำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-full text-[11px] flex-shrink-0 transition">
-          💡 ขอช้อยส์
-        </button>
-        <button onclick="triggerQuickAction('ฉันตั้งท่าระวังภัย ตรวจสอบว่ามีศัตรูซุ่มโจมตีหรือไม่')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 py-1 rounded-full text-[11px] flex-shrink-0 transition">
-          🛡️ ระวังภัย
-        </button>
+      <!-- Quick Action Deck (Adaptive PC/Mobile) -->
+      <div class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80">
+        <div class="max-w-4xl mx-auto flex gap-1.5 overflow-x-auto md:grid md:grid-cols-4 chat-scroll">
+          <button onclick="triggerQuickAction('ฉันสำรวจและตรวจสอบสภาพแวดล้อมรอบตัวอย่างละเอียด (Perception)')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            🔍 สำรวจรอบตัว
+          </button>
+          <button onclick="triggerQuickAction('ฉันพยายามพรางตัวและเคลื่อนไหวอย่างเงียบเชียบที่สุด (Stealth)')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            🤫 ย่องเงียบ
+          </button>
+          <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือกหรือเบาะแสที่เป็นไปได้สำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            💡 ขอช้อยส์
+          </button>
+          <button onclick="triggerQuickAction('ฉันตั้งท่าระวังภัย ตรวจสอบว่ามีศัตรูซุ่มโจมตีหรือไม่')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
+            🛡️ ระวังภัย
+          </button>
+        </div>
       </div>
 
       <!-- Action Console -->
-      <div class="p-2 sm:p-3 bg-slate-900 border-t border-slate-800 flex gap-2 items-center flex-shrink-0">
-        <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำ..."
-                  class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 resize-none chat-scroll"></textarea>
-        <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-4 py-2 rounded-lg font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 flex-shrink-0">
-          <span>ส่ง</span>
-          <i class="fa-solid fa-paper-plane text-xs"></i>
-        </button>
+      <div class="p-3 bg-slate-900 border-t border-slate-800 flex-shrink-0">
+        <div class="max-w-4xl mx-auto flex gap-2 items-center">
+          <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำของคุณ... (กด Enter เพื่อส่ง)"
+                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 resize-none chat-scroll"
+                    onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); sendAction(); }"></textarea>
+          <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 flex-shrink-0">
+            <span>ส่ง</span>
+            <i class="fa-solid fa-paper-plane text-xs"></i>
+          </button>
+        </div>
       </div>
 
     </section>
 
-    <!-- Dice Popover (Responsive Modal) -->
-    <div id="dicePane" class="fixed inset-x-4 top-20 sm:inset-auto sm:bottom-16 sm:left-4 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-2xl hidden flex-col gap-2 w-auto sm:w-72">
+    <!-- Mobile Dice Modal (Floating on Mobile) -->
+    <div id="dicePane" class="fixed inset-x-4 top-24 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-2xl hidden md:hidden flex-col gap-2.5 w-auto">
       <div class="flex justify-between items-center pb-1 border-b border-slate-800">
         <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> Dice Tool</span>
         <button onclick="toggleDicePane()" class="text-slate-400 hover:text-slate-200 text-sm px-1.5">&times;</button>
       </div>
       <div class="flex items-center gap-1.5">
-        <select id="diceType" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
+        <select id="diceTypeMobile" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
           <option value="20">d20</option>
           <option value="4">d4</option>
           <option value="6">d6</option>
@@ -173,13 +203,13 @@
           <option value="10">d10</option>
           <option value="12">d12</option>
         </select>
-        <input type="number" id="diceMod" value="0" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+0">
+        <input type="number" id="diceModMobile" value="0" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+0">
         <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer">
-          <input type="checkbox" id="advCheck" class="accent-amber-500 rounded"> Adv
+          <input type="checkbox" id="advCheckMobile" class="accent-amber-500 rounded"> Adv
         </label>
       </div>
-      <button onclick="executeRoll()" class="bg-indigo-600 hover:bg-indigo-500 font-bold py-1.5 rounded text-xs transition">ทอยลูกเต๋า</button>
-      <div id="diceOutput" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
+      <button onclick="executeRoll('Mobile')" class="bg-indigo-600 hover:bg-indigo-500 font-bold py-1.5 rounded-lg text-xs transition">ทอยลูกเต๋า</button>
+      <div id="diceOutputMobile" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
     </div>
 
   </main>
@@ -227,9 +257,7 @@
     </div>
   </div>
 
-  <script type="module">
-    import { GoogleGenAI } from "https://esm.run/@google/genai";
-
+  <script>
     let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
     let chatHistory = [];
     const MAX_HISTORY_TURNS = 6;
@@ -272,7 +300,7 @@
       if (val) {
         localStorage.setItem("SOLO_DND_KEY", val);
         apiKey = val;
-        alert("บันทึก API Key เรียบร้อย!");
+        alert("บันทึก API Key เรียบร้อยแล้ว!");
         toggleSettingsModal();
       }
     };
@@ -331,10 +359,12 @@
       triggerQuickAction(`ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)`);
     };
 
-    window.executeRoll = () => {
-      const sides = parseInt(document.getElementById("diceType").value);
-      const mod = parseInt(document.getElementById("diceMod").value) || 0;
-      const adv = document.getElementById("advCheck").checked;
+    // Unified Dice Engine (Supports both PC and Mobile controls)
+    window.executeRoll = (device) => {
+      const suffix = device === 'PC' ? 'PC' : 'Mobile';
+      const sides = parseInt(document.getElementById(`diceType${suffix}`).value);
+      const mod = parseInt(document.getElementById(`diceMod${suffix}`).value) || 0;
+      const adv = document.getElementById(`advCheck${suffix}`).checked;
 
       let r1 = Math.floor(Math.random() * sides) + 1;
       let total = r1 + mod;
@@ -348,11 +378,11 @@
       }
 
       const resText = `${desc} ${mod >= 0 ? '+' : ''}${mod} = ${total}`;
-      document.getElementById("diceOutput").innerText = resText;
+      document.getElementById(`diceOutput${suffix}`).innerText = resText;
 
       const input = document.getElementById("playerInput");
       input.value = `[ทอยเต๋า: ${resText}] ` + input.value;
-      if (window.innerWidth < 768) {
+      if (device === 'Mobile') {
         switchMobileTab('story');
         toggleDicePane();
       }
@@ -426,6 +456,7 @@
       sendDirectAction(text);
     };
 
+    // Direct REST API (Reliable across all Browsers)
     async function sendDirectAction(text) {
       if (!apiKey) {
         toggleSettingsModal();
@@ -440,8 +471,6 @@
 
       try {
         const selectedModel = document.getElementById("modelSelector").value;
-        const ai = new GoogleGenAI(apiKey);
-
         const charSnapshot = `[ตัวละคร: ${document.getElementById("charName").value} | ${document.getElementById("charClass").value} | HP: ${document.getElementById("currentHp").value}/${document.getElementById("maxHp").value} | AC: ${document.getElementById("charAc").value} | ไอเทม: ${document.getElementById("charInventory").value.replace(/\n/g, ', ')} | ปาร์ตี้: ${document.getElementById("charParty").value.replace(/\n/g, ', ')}]`;
 
         if (chatHistory.length > MAX_HISTORY_TURNS * 2) {
@@ -452,34 +481,49 @@
 
         const systemInstruction = `คุณคือ Dungeon Master (DM) มืออาชีพสำหรับ DnD 5e Solo
 กฎสำคัญ:
-1. ตอบกระชับ ตื่นเต้น คลี่คลายเหตุการณ์ตามกฎ DnD ให้เหมาะกับการอ่านบนหน้าจอมือถือ
+1. ตอบกระชับ ตื่นเต้น คลี่คลายเหตุการณ์ตามกฎ DnD
 2. หากมีการเปลี่ยนแปลงเลือด ได้รับไอเทม หรือมี NPC เข้าร่วม ให้ใส่แท็ก JSON ไว้ท้ายคำตอบเสมอในรูปแบบ:
 <<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>
 3. ให้ทางเลือก 2-3 ข้อสั้นๆ ท้ายคำตอบ`;
 
-        const response = await ai.models.generateContent({
-          model: selectedModel,
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+        const reqBody = {
           contents: chatHistory,
-          config: {
-            systemInstruction: systemInstruction,
+          systemInstruction: {
+            parts: [{ text: systemInstruction }]
+          },
+          generationConfig: {
             temperature: 0.8
           }
+        };
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reqBody)
         });
 
-        let reply = response.text || "";
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error ? data.error.message : "เรียก API ไม่สำเร็จ");
+        }
+
+        let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "DM นิ่งเงียบไป...";
 
         const syncMatch = reply.match(/<<<STATUS_SYNC:\s*([\s\S]*?)>>>/);
         if (syncMatch) {
           try {
-            const data = JSON.parse(syncMatch[1]);
-            if (data.hp !== undefined) document.getElementById("currentHp").value = data.hp;
-            if (data.addItem) {
-              const cleanItem = data.addItem.replace(/^[•\-\*]\s*/, "");
+            const syncData = JSON.parse(syncMatch[1]);
+            if (syncData.hp !== undefined) document.getElementById("currentHp").value = syncData.hp;
+            if (syncData.addItem) {
+              const cleanItem = syncData.addItem.replace(/^[•\-\*]\s*/, "");
               const inv = document.getElementById("charInventory");
               inv.value = (inv.value.trim() ? inv.value.trim() + "\n" : "") + `• ${cleanItem}`;
             }
-            if (data.addParty) {
-              const cleanParty = data.addParty.replace(/^[•\-\*]\s*/, "");
+            if (syncData.addParty) {
+              const cleanParty = syncData.addParty.replace(/^[•\-\*]\s*/, "");
               const party = document.getElementById("charParty");
               party.value = (party.value.trim() ? party.value.trim() + "\n" : "") + `• ${cleanParty}`;
             }
