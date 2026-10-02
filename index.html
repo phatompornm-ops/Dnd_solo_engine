@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Solo DnD Engine - Stable Release</title>
+  <title>Solo DnD Engine - Verified Stable</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -168,7 +168,7 @@
             💡 ขอช้อยส์
           </button>
           <button onclick="triggerQuickAction('ฉันตั้งท่าระวังภัย ตรวจสอบว่ามีศัตรูซุ่มโจมตีหรือไม่')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap md:whitespace-normal truncate transition">
-            🛡️ ระวังภัย
+            🛡️️ ระวังภัย
           </button>
         </div>
       </div>
@@ -244,10 +244,11 @@
         <input type="password" id="apiKeyInputModal" placeholder="วาง API Key ที่นี่" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 focus:border-amber-500 outline-none">
       </div>
       <div>
-        <label class="block text-slate-400 mb-1">โมเดล AI:</label>
+        <label class="block text-slate-400 mb-1">โมเดล AI (ระบบตรวจยืนยันแล้ว):</label>
         <select id="modelSelector" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 outline-none">
-          <option value="gemini-3.8-flash">Gemini 3.8 Flash (แนะนำ: เสถียรและเร็ว)</option>
-          <option value="gemini-3.8-flash-lite">Gemini 3.8 Flash Lite (ประหยัด Token)</option>
+          <option value="gemini-3.5-flash-lite" selected>3.5 Flash-Lite (คำตอบเร็วสุด / เสถียร)</option>
+          <option value="gemini-3.8-flash">3.8 Flash (ความช่วยเหลือรอบด้าน)</option>
+          <option value="gemini-3.1-pro-preview">3.1 Pro (การให้เหตุผลขั้นสูง / บทบาทสมมติ)</option>
         </select>
       </div>
       <div class="flex justify-between items-center pt-2 border-t border-slate-800">
@@ -259,7 +260,7 @@
 
   <script>
     let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
-    let savedModel = localStorage.getItem("SOLO_DND_MODEL") || "gemini-3.8-flash";
+    let savedModel = localStorage.getItem("SOLO_DND_MODEL") || "gemini-3.5-flash-lite";
     let chatHistory = [];
     const MAX_HISTORY_TURNS = 6;
 
@@ -366,7 +367,7 @@
       triggerQuickAction(`ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)`);
     };
 
-    // Unified Dice Engine (Supports both PC and Mobile controls)
+    // Unified Dice Engine
     window.executeRoll = (device) => {
       const suffix = device === 'PC' ? 'PC' : 'Mobile';
       const sides = parseInt(document.getElementById(`diceType${suffix}`).value);
@@ -468,7 +469,27 @@
       sendDirectAction(text);
     };
 
-    // Direct REST API
+    // Helper call function with 1-time Auto-Retry on High Demand
+    async function executeApiCall(url, body) {
+      let response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      // If high demand (503) or rate limit, wait 1.5s and retry once
+      if (response.status === 503 || response.status === 429) {
+        await new Promise(r => setTimeout(r, 1500));
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+      }
+      return response;
+    }
+
+    // Direct REST API Core
     async function sendDirectAction(text) {
       if (!apiKey) {
         toggleSettingsModal();
@@ -482,7 +503,7 @@
       sendBtn.classList.add("opacity-50");
 
       try {
-        const currentModel = savedModel || "gemini-3.8-flash";
+        const currentModel = savedModel || "gemini-3.5-flash-lite";
         const charSnapshot = `[ตัวละคร: ${document.getElementById("charName").value} | ${document.getElementById("charClass").value} | HP: ${document.getElementById("currentHp").value}/${document.getElementById("maxHp").value} | AC: ${document.getElementById("charAc").value} | ไอเทม: ${document.getElementById("charInventory").value.replace(/\n/g, ', ')} | ปาร์ตี้: ${document.getElementById("charParty").value.replace(/\n/g, ', ')}]`;
 
         if (chatHistory.length > MAX_HISTORY_TURNS * 2) {
@@ -510,12 +531,7 @@
           }
         };
 
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(reqBody)
-        });
-
+        const response = await executeApiCall(apiUrl, reqBody);
         const data = await response.json();
 
         if (!response.ok) {
