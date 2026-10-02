@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Solo DnD Engine - PC & Mobile Complete</title>
+  <title>Solo DnD Engine - Stable Release</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -246,8 +246,8 @@
       <div>
         <label class="block text-slate-400 mb-1">โมเดล AI:</label>
         <select id="modelSelector" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 outline-none">
-          <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-          <option value="gemini-2.5-flash-lite">Gemini Flash Lite (ประหยัด Token)</option>
+          <option value="gemini-3.8-flash">Gemini 3.8 Flash (แนะนำ: เสถียรและเร็ว)</option>
+          <option value="gemini-3.8-flash-lite">Gemini 3.8 Flash Lite (ประหยัด Token)</option>
         </select>
       </div>
       <div class="flex justify-between items-center pt-2 border-t border-slate-800">
@@ -259,6 +259,7 @@
 
   <script>
     let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
+    let savedModel = localStorage.getItem("SOLO_DND_MODEL") || "gemini-3.8-flash";
     let chatHistory = [];
     const MAX_HISTORY_TURNS = 6;
 
@@ -291,18 +292,24 @@
     window.toggleSettingsModal = () => {
       const modal = document.getElementById("settingsModal");
       document.getElementById("apiKeyInputModal").value = apiKey;
+      document.getElementById("modelSelector").value = savedModel;
       modal.classList.toggle("hidden");
       modal.classList.toggle("flex");
     };
 
     window.saveApiKeyModal = () => {
-      const val = document.getElementById("apiKeyInputModal").value.trim();
-      if (val) {
-        localStorage.setItem("SOLO_DND_KEY", val);
-        apiKey = val;
-        alert("บันทึก API Key เรียบร้อยแล้ว!");
-        toggleSettingsModal();
+      const keyVal = document.getElementById("apiKeyInputModal").value.trim();
+      const modelVal = document.getElementById("modelSelector").value;
+      
+      if (keyVal) {
+        localStorage.setItem("SOLO_DND_KEY", keyVal);
+        apiKey = keyVal;
       }
+      localStorage.setItem("SOLO_DND_MODEL", modelVal);
+      savedModel = modelVal;
+      
+      alert("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
+      toggleSettingsModal();
     };
 
     // Auto Compress Image with Storage Guard
@@ -434,6 +441,11 @@
         img.classList.remove("hidden");
         document.getElementById("avatarPlaceholder").classList.add("hidden");
       }
+      
+      const modelSelect = document.getElementById("modelSelector");
+      if (modelSelect && savedModel) {
+        modelSelect.value = savedModel;
+      }
     }
 
     window.clearAdventureData = () => {
@@ -456,7 +468,7 @@
       sendDirectAction(text);
     };
 
-    // Direct REST API (Reliable across all Browsers)
+    // Direct REST API
     async function sendDirectAction(text) {
       if (!apiKey) {
         toggleSettingsModal();
@@ -470,7 +482,7 @@
       sendBtn.classList.add("opacity-50");
 
       try {
-        const selectedModel = document.getElementById("modelSelector").value;
+        const currentModel = savedModel || "gemini-3.8-flash";
         const charSnapshot = `[ตัวละคร: ${document.getElementById("charName").value} | ${document.getElementById("charClass").value} | HP: ${document.getElementById("currentHp").value}/${document.getElementById("maxHp").value} | AC: ${document.getElementById("charAc").value} | ไอเทม: ${document.getElementById("charInventory").value.replace(/\n/g, ', ')} | ปาร์ตี้: ${document.getElementById("charParty").value.replace(/\n/g, ', ')}]`;
 
         if (chatHistory.length > MAX_HISTORY_TURNS * 2) {
@@ -484,9 +496,9 @@
 1. ตอบกระชับ ตื่นเต้น คลี่คลายเหตุการณ์ตามกฎ DnD
 2. หากมีการเปลี่ยนแปลงเลือด ได้รับไอเทม หรือมี NPC เข้าร่วม ให้ใส่แท็ก JSON ไว้ท้ายคำตอบเสมอในรูปแบบ:
 <<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>
-3. ให้ทางเลือก 2-3 ข้อสั้นๆ ท้ายคำตอบ`;
+3. ให้ทางเลือก 2-3 ข้อสั้นๆ ท้ายคำตอบเสมอ`;
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
 
         const reqBody = {
           contents: chatHistory,
@@ -512,10 +524,14 @@
 
         let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "DM นิ่งเงียบไป...";
 
+        // Robust Regex Matcher & JSON Sanitizer
         const syncMatch = reply.match(/<<<STATUS_SYNC:\s*([\s\S]*?)>>>/);
         if (syncMatch) {
           try {
-            const syncData = JSON.parse(syncMatch[1]);
+            let jsonText = syncMatch[1].trim();
+            jsonText = jsonText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+            const syncData = JSON.parse(jsonText);
+            
             if (syncData.hp !== undefined) document.getElementById("currentHp").value = syncData.hp;
             if (syncData.addItem) {
               const cleanItem = syncData.addItem.replace(/^[•\-\*]\s*/, "");
@@ -529,7 +545,7 @@
             }
             saveSheet();
             reply = reply.replace(/<<<STATUS_SYNC:\s*[\s\S]*?>>>/, "").trim();
-          } catch(e) { console.warn("JSON sync error", e); }
+          } catch(e) { console.warn("JSON sync parser error", e); }
         }
 
         chatHistory.push({ role: "model", parts: [{ text: reply }] });
