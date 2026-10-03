@@ -206,8 +206,9 @@ const SYSTEM_RULES = `คุณคือ Dungeon Master (DM) มืออาช�
 4. ท้ายคำบรรยายเสนอทางเลือก 2-3 ข้อ พร้อม DC เสมอ ในรูปแบบ:
 [ชอยส์ 1]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
 [ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
-5. หาก HP เปลี่ยนหรือได้ไอเทม/สหาย ให้ใส่ท้ายคำตอบ:
-<<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>`;
+5. อัปเดตสเตตัสเฉพาะสิ่งที่เปลี่ยนจริงในข้อความตอบนี้เท่านั้น โดยใส่แท็กท้ายคำตอบ:
+<<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>
+กฎของแท็ก: ใส่เฉพาะ key ที่เปลี่ยนในรอบนี้ ห้ามใส่ key ที่ไม่เปลี่ยน, ห้ามเพิ่มไอเทมหรือสหายที่มีอยู่แล้วในรายการ [ตัวละคร], ผู้เล่นได้ของหรือสหายใหม่ก็ต่อเมื่อเรื่องราวเพิ่งมอบให้ในรอบนี้จริง และถ้าไม่มีอะไรเปลี่ยนให้ไม่ต้องใส่แท็กเลย`;
 
 function buildSystemInstruction() {
   // ย้าย snapshot มาไว้ที่ systemInstruction ส่งครั้งเดียวต่อคำขอ ไม่ซ้ำใน history
@@ -383,6 +384,16 @@ function loadSavedSheet() {
     const d = JSON.parse(localStorage.getItem("DND_SHEET_DATA_V2") || "null");
     if (d) for (const k in FIELDS) if (d[k] !== undefined && d[k] !== null) $(FIELDS[k]).value = d[k];
   } catch (e) {}
+  // ล้างรายการซ้ำที่ค้างจากเวอร์ชันก่อน
+  ["charInventory", "charParty"].forEach(id => {
+    const seen = new Set();
+    $(id).value = $(id).value.split("\n").filter(l => {
+      const k = l.replace(/^[•\-*]\s*/, "").trim().toLowerCase();
+      if (!k || seen.has(k)) return false;
+      seen.add(k); return true;
+    }).join("\n");
+  });
+  saveSheet();
   const av = localStorage.getItem("DND_AVATAR");
   if (av) { $("charAvatar").src = av; $("charAvatar").classList.remove("hidden"); $("avatarPlaceholder").classList.add("hidden"); }
 }
@@ -438,10 +449,18 @@ async function sendDirectAction(text) {
         const j = m[1].trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
         const sync = JSON.parse(j);
         const bullet = s => String(s).replace(/^[•\-*]\s*/, "");
-        const append = (id, v) => { const el = $(id); el.value = (el.value.trim() ? el.value.trim() + "\n" : "") + "• " + bullet(v); };
+        const append = (id, v, label) => {
+          const el = $(id);
+          const name = bullet(v).trim();
+          if (!name) return;
+          const exists = el.value.split("\n").some(l => bullet(l).trim().toLowerCase() === name.toLowerCase());
+          if (exists) return; // ข้ามถ้ามีอยู่แล้ว
+          el.value = (el.value.trim() ? el.value.trim() + "\n" : "") + "• " + name;
+          appendMessage("System", `${label}: ${name}`, "system");
+        };
         if (sync.hp !== undefined && !isNaN(parseInt(sync.hp))) $("currentHp").value = sync.hp;
-        if (sync.addItem) append("charInventory", sync.addItem);
-        if (sync.addParty) append("charParty", sync.addParty);
+        if (sync.addItem) [].concat(sync.addItem).forEach(x => append("charInventory", x, "ได้รับไอเทม"));
+        if (sync.addParty) [].concat(sync.addParty).forEach(x => append("charParty", x, "สหายใหม่"));
         saveSheet();
       } catch (e) { console.warn("sync parse error", e); }
       reply = reply.replace(/<<<STATUS_SYNC:\s*[\s\S]*?>>>/, "").trim();
