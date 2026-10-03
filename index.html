@@ -1,739 +1,515 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Solo DnD Engine - PC & Mobile Dual Edition</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .chat-scroll::-webkit-scrollbar { width: 6px; }
-    .chat-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-    .editable { background: transparent; border-bottom: 1px dashed #475569; outline: none; }
-    .editable:focus { border-bottom-color: #f59e0b; background: rgba(51, 65, 85, 0.4); }
-    .choice-btn { transition: all 0.2s ease; }
-    .choice-btn:hover { border-color: #f59e0b; background-color: rgba(245, 158, 11, 0.15); transform: translateY(-1px); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Solo DnD Engine</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{font-family:'Segoe UI',Tahoma,sans-serif}
+.chat-scroll::-webkit-scrollbar{width:6px}
+.chat-scroll::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+.editable{background:transparent;border-bottom:1px dashed #475569;outline:none}
+.editable:focus{border-bottom-color:#f59e0b;background:rgba(51,65,85,.4)}
+.choice-btn:hover{border-color:#f59e0b;background:rgba(245,158,11,.15)}
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
 
-  <!-- Top Header -->
-  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex justify-between items-center shadow-md flex-shrink-0 z-30">
-    <div class="flex items-center gap-2.5">
-      <i class="fa-solid fa-dragon text-amber-500 text-xl"></i>
-      <h1 class="font-bold text-sm sm:text-base tracking-wide text-amber-200">Solo DnD Tabletop Experience</h1>
+<header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex justify-between items-center flex-shrink-0 z-30">
+  <div class="flex items-center gap-2.5">
+    <i class="fa-solid fa-dragon text-amber-500 text-xl"></i>
+    <h1 class="font-bold text-sm sm:text-base text-amber-200">Solo DnD Tabletop</h1>
+  </div>
+  <button onclick="toggleSettingsModal()" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-xs border border-slate-700 flex items-center gap-1.5">
+    <i class="fa-solid fa-gear text-amber-400"></i><span>ตั้งค่า API / โมเดล</span>
+  </button>
+</header>
+
+<main class="flex-1 flex overflow-hidden relative">
+
+<aside id="characterPane" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900 border-r border-slate-800 flex-col p-3.5 gap-3 overflow-hidden absolute md:static inset-0 z-20 hidden md:flex">
+  <div class="bg-slate-800/80 rounded-xl p-3 border border-amber-500/20 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="relative group w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-950 flex-shrink-0 cursor-pointer" onclick="document.getElementById('avatarFileInput').click()">
+        <img id="charAvatar" src="" alt="Avatar" class="w-full h-full object-cover hidden">
+        <div id="avatarPlaceholder" class="w-full h-full flex items-center justify-center text-amber-300 text-xs"><i class="fa-solid fa-camera"></i></div>
+      </div>
+      <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarCompress(event)">
+      <div class="flex-1 min-w-0">
+        <input id="charName" value="King Halo" class="editable font-bold text-amber-300 text-sm w-full truncate" onchange="saveSheet()">
+        <input id="charClass" value="Paladin (Oath of Glory) | Lv. 1" class="editable text-[11px] text-slate-400 w-full mt-0.5 truncate" onchange="saveSheet()">
+      </div>
     </div>
-    
-    <div class="flex items-center gap-2">
-      <button onclick="takeShortRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs transition items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-mug-hot"></i> Short Rest
-      </button>
-      <button onclick="takeLongRest()" class="hidden md:inline-flex bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-1.5 rounded-lg text-xs transition items-center gap-1.5 shadow-sm">
-        <i class="fa-solid fa-bed"></i> Long Rest
-      </button>
-
-      <button onclick="toggleSettingsModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs border border-slate-700 flex items-center gap-1.5 transition shadow-sm">
-        <i class="fa-solid fa-gear text-amber-400"></i>
-        <span>ตั้งค่า API / โมเดล</span>
-      </button>
+    <div class="grid grid-cols-4 gap-1.5 mt-2.5 text-center">
+      <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
+        <span class="text-[9px] text-slate-400 block font-semibold">HP</span>
+        <div class="flex justify-center items-center gap-0.5 mt-0.5">
+          <input id="currentHp" type="number" value="12" class="editable text-center text-emerald-400 font-bold text-xs w-7" onchange="saveSheet()">
+          <span class="text-[10px] text-slate-600">/</span>
+          <input id="maxHp" type="number" value="12" class="editable text-center text-slate-400 text-xs w-7" onchange="saveSheet()">
+        </div>
+      </div>
+      <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
+        <span class="text-[9px] text-slate-400 block font-semibold">AC</span>
+        <input id="charAc" type="number" value="16" class="editable text-center text-sky-400 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
+      </div>
+      <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
+        <span class="text-[9px] text-slate-400 block font-semibold">Speed</span>
+        <input id="charSpeed" value="35 ft" class="editable text-center text-amber-400 text-xs w-full mt-0.5" onchange="saveSheet()">
+      </div>
+      <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
+        <span class="text-[9px] text-amber-400 block font-semibold">Pride</span>
+        <input id="charPride" type="number" value="2" class="editable text-center text-amber-300 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
+      </div>
     </div>
-  </header>
-
-  <!-- Main Viewport Area -->
-  <main class="flex-1 flex overflow-hidden relative">
-    
-    <!-- Left Column: Character Sheet, Lore & Dice (PC Sidebar / Mobile Tab) -->
-    <aside id="characterPane" class="w-full md:w-[380px] lg:w-[420px] bg-slate-900 md:bg-slate-900/95 border-r border-slate-800 flex flex-col p-3.5 gap-3 overflow-hidden absolute md:static inset-0 z-20 hidden md:flex">
-      
-      <!-- Character Identity Card -->
-      <div class="bg-slate-800/80 rounded-xl p-3 border border-amber-500/20 shadow-sm flex-shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="relative group w-13 h-13 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-amber-400 bg-slate-950 flex-shrink-0 cursor-pointer" onclick="document.getElementById('avatarFileInput').click()">
-            <img id="charAvatar" src="" alt="Avatar" class="w-full h-full object-cover hidden">
-            <div id="avatarPlaceholder" class="w-full h-full flex flex-col items-center justify-center text-amber-300 text-xs">
-              <i class="fa-solid fa-camera"></i>
-            </div>
-            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[9px] text-amber-200 transition">
-              เปลี่ยนรูป
-            </div>
-          </div>
-          <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarCompress(event)">
-
-          <div class="flex-1 min-w-0">
-            <input id="charName" value="King Halo" class="editable font-bold text-amber-300 text-sm w-full truncate" placeholder="ชื่อตัวละคร" onchange="saveSheet()">
-            <input id="charClass" value="Paladin (Oath of Glory) | Lv. 1" class="editable text-[11px] text-slate-400 w-full mt-0.5 truncate" placeholder="คลาส/ระดับ" onchange="saveSheet()">
-          </div>
-        </div>
-
-        <!-- Vital Stats -->
-        <div class="grid grid-cols-4 gap-1.5 mt-2.5 text-center">
-          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
-            <span class="text-[9px] text-slate-400 uppercase block font-semibold">HP</span>
-            <div class="flex justify-center items-center gap-0.5 mt-0.5">
-              <input id="currentHp" type="number" value="12" class="editable text-center text-emerald-400 font-bold text-xs w-7" onchange="saveSheet()">
-              <span class="text-[10px] text-slate-600">/</span>
-              <input id="maxHp" type="number" value="12" class="editable text-center text-slate-400 text-xs w-7" onchange="saveSheet()">
-            </div>
-          </div>
-          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
-            <span class="text-[9px] text-slate-400 uppercase block font-semibold">AC</span>
-            <input id="charAc" type="number" value="16" class="editable text-center text-sky-400 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
-          </div>
-          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
-            <span class="text-[9px] text-slate-400 uppercase block font-semibold">Speed</span>
-            <input id="charSpeed" value="35 ft" class="editable text-center text-amber-400 text-xs w-full mt-0.5" onchange="saveSheet()">
-          </div>
-          <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
-            <span class="text-[9px] text-amber-400 uppercase block font-semibold">Pride</span>
-            <input id="charPride" type="number" value="2" class="editable text-center text-amber-300 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
-          </div>
-        </div>
-      </div>
-
-      <!-- Sidebar Sub-Tabs (จัดการพื้นที่จอ PC / Mobile ให้ไม่ล้น) -->
-      <div class="flex bg-slate-950/80 p-1 rounded-lg border border-slate-800 flex-shrink-0 text-xs">
-        <button onclick="switchSidebarSubTab('stats')" id="subTabStatsBtn" class="flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold transition">
-          <i class="fa-solid fa-backpack mr-1"></i> ของ & การทอย
-        </button>
-        <button onclick="switchSidebarSubTab('lore')" id="subTabLoreBtn" class="flex-1 py-1 rounded text-slate-400 hover:text-slate-200 transition">
-          <i class="fa-solid fa-book-atlas mr-1"></i> Lore & ตัวตน
-        </button>
-      </div>
-
-      <!-- Tab View 1: Stats, Dice & Inventory -->
-      <div id="subTabStatsPane" class="flex-1 flex flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
-        <!-- Desktop Embedded Dice Deck -->
-        <div id="pcDiceCard" class="hidden md:flex flex-col bg-slate-800/50 rounded-xl p-2.5 border border-slate-800 gap-1.5 transition">
-          <div class="flex justify-between items-center text-xs">
-            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">🎲 Dice Tool (PC)</span>
-            <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
-              <option value="20" selected>d20 (Skill / Attack)</option>
-              <option value="4">d4</option>
-              <option value="6">d6</option>
-              <option value="8">d8</option>
-              <option value="10">d10</option>
-              <option value="12">d12</option>
-            </select>
-            <input type="number" id="diceModPC" value="2" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
-            <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer select-none">
-              <input type="checkbox" id="advCheckPC" class="accent-amber-500 rounded"> Adv
-            </label>
-            <button onclick="executeRoll('PC')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1 rounded text-xs transition shadow">ทอยเต๋า</button>
-          </div>
-        </div>
-
-        <!-- Inventory -->
-        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[110px]">
-          <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-briefcase"></i> กระเป๋าไอเทม & ยุทโธปกรณ์
-          </span>
-          <textarea id="charInventory" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
-        </div>
-
-        <!-- Companions -->
-        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[90px]">
-          <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center gap-1.5">
-            <i class="fa-solid fa-users"></i> สหายปาร์ตี้ (NPC)
-          </span>
-          <textarea id="charParty" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="พรรคพวกที่ร่วมเดินทาง..."></textarea>
-        </div>
-      </div>
-
-      <!-- Tab View 2: Lore & Personality -->
-      <div id="subTabLorePane" class="flex-1 hidden flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
-        <!-- Character Personality -->
-        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[120px]">
-          <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center justify-between">
-            <span><i class="fa-solid fa-user-tag mr-1"></i> บุคลิก & ภูมิหลังตัวละคร</span>
-            <span class="text-[10px] text-slate-400">DM อิงตามนี้</span>
-          </span>
-          <textarea id="charPersonality" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="บุคลิกตัวละคร...">คุณหนูตระกูลสูงศักดิ์ ผู้รักเกียรติยศและความสง่างาม ปฏิเสธความช่วยเหลือจากตระกูลเพื่อพิสูจน์ชัยชนะด้วยตนเอง เป็นคนปากร้ายใจดี เกลียดความอยุติธรรมและการดูถูก</textarea>
-        </div>
-
-        <!-- World Lore -->
-        <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[140px]">
-          <span class="text-xs text-amber-300 font-semibold mb-1 flex items-center justify-between">
-            <span><i class="fa-solid fa-earth-americas mr-1"></i> ข้อมูลโลก & แคมเปญ (Lore)</span>
-            <span class="text-[10px] text-slate-400">กรอบเนื้อเรื่อง</span>
-          </span>
-          <textarea id="worldLore" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none chat-scroll" onchange="saveSheet()" placeholder="กรอบเนื้อเรื่องโลก...">แคมเปญ: The Gilded Pride of Silvermist (ดินแดนหุบเขาซิลเวอร์มิสต์ ถูกปกคลุมด้วยสายหมอกเวทมนตร์ มีซากอารยธรรมจักรวรรดิเก่า มีพวกสลัดหมอกออกปล้นสะดม และมีอันตรายจากสัตว์อสูรสายหมอก)</textarea>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- Narrative Stream (Right Column on PC, Tab 2 on Mobile) -->
-    <section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10">
-      
-      <!-- Dialogue Stream -->
-      <div id="narrativeBox" class="flex-1 p-3.5 sm:p-5 overflow-y-auto chat-scroll flex flex-col gap-3.5 max-w-4xl mx-auto w-full">
-        <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
-          <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
-          <div class="text-xs sm:text-sm leading-relaxed text-slate-200">
-            ยินดีต้อนรับสู่แคมเปญ Solo DnD! โลกและบุคลิกของตัวละครถูกตรึงไว้กับระบบเรียบร้อย คุณสามารถ **คลิกชอยส์** ที่ DM เสนอ หรือ **พิมพ์การกระทำอิสระตามจินตนาการของคุณเอง** แล้ว DM จะประเมินค่า DC ให้ทอยเต๋าตัดสินผลทันทีครับ!
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Action Deck (Adaptive Flex on PC / Scroll on Mobile) -->
-      <div class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80">
-        <div class="max-w-4xl mx-auto flex gap-2 overflow-x-auto md:grid md:grid-cols-4 chat-scroll">
-          <button onclick="triggerQuickAction('ฉันขอตรวจสอบพื้นที่รอบตัวอย่างละเอียด เพื่อหาเบาะแส ร่องรอย หรือกลิ่นอายเวทมนตร์')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-magnifying-glass text-sky-400"></i>
-            <span>สำรวจพื้นที่ (Check)</span>
-          </button>
-          <button onclick="usePrideAdvantage()" class="bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/50 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition font-semibold flex items-center justify-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-crown text-amber-400"></i>
-            <span>ใช้ Pride (Advantage)</span>
-          </button>
-          <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือก 2-3 ข้อตามกฎ DnD พร้อมระบุค่า DC ที่ต้องทอยสำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-lightbulb text-amber-400"></i>
-            <span>ขอช้อยส์ + ค่า DC</span>
-          </button>
-          <button onclick="triggerQuickAction('ฉันตั้งท่าชักดาบเรเปียร์เตรียมพร้อมต่อสู้ ท้าทายศัตรูอย่างสง่างาม')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-shield-halved text-rose-400"></i>
-            <span>ตั้งท่าต่อสู้ (Combat)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Action Console -->
-      <div class="p-3 bg-slate-900 border-t border-slate-800 flex-shrink-0">
-        <div class="max-w-4xl mx-auto flex gap-2 items-center">
-          <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำอิสระตามจินตนาการของคุณ... (Enter เพื่อส่ง)"
-                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-amber-500 resize-none chat-scroll"
-                    onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); sendAction(); }"></textarea>
-          <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 flex-shrink-0 shadow">
-            <span>ส่ง</span>
-            <i class="fa-solid fa-paper-plane text-xs"></i>
-          </button>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Mobile Dice Modal (Floating on Mobile Only) -->
-    <div id="dicePane" class="fixed inset-x-4 top-20 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-2xl hidden md:hidden flex-col gap-2.5 w-auto">
-      <div class="flex justify-between items-center pb-1 border-b border-slate-800">
-        <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> กล่องทอยเต๋า (Mobile Roller)</span>
-        <button onclick="toggleDicePane()" class="text-slate-400 hover:text-slate-200 text-sm px-1.5">&times;</button>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <select id="diceTypeMobile" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
-          <option value="20" selected>d20 (ตรวจทักษะ / โจมตี)</option>
-          <option value="4">d4</option>
-          <option value="6">d6</option>
-          <option value="8">d8</option>
-          <option value="10">d10</option>
-          <option value="12">d12</option>
-        </select>
-        <input type="number" id="diceModMobile" value="2" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center" placeholder="+Mod">
-        <label class="flex items-center gap-1 text-xs text-slate-300 cursor-pointer select-none">
-          <input type="checkbox" id="advCheckMobile" class="accent-amber-500 rounded"> Adv
-        </label>
-      </div>
-      <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs transition shadow">
-        🎲 ทอยเต๋าเดี๋ยวนี้
-      </button>
-      <div id="diceOutputMobile" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
-    </div>
-
-  </main>
-
-  <!-- Mobile Bottom Tab Navigation -->
-  <nav class="md:hidden bg-slate-900 border-t border-slate-800 flex justify-around py-2 z-30 flex-shrink-0">
-    <button onclick="switchMobileTab('story')" id="tabStoryBtn" class="flex flex-col items-center text-amber-400 text-xs gap-0.5">
-      <i class="fa-solid fa-book-open text-base"></i>
-      <span>เนื้อเรื่อง</span>
-    </button>
-    <button onclick="switchMobileTab('char')" id="tabCharBtn" class="flex flex-col items-center text-slate-400 text-xs gap-0.5">
-      <i class="fa-solid fa-user-shield text-base"></i>
-      <span>ตัวละคร / Lore</span>
-    </button>
-    <button onclick="toggleDicePane()" class="flex flex-col items-center text-amber-400 text-xs gap-0.5">
-      <i class="fa-solid fa-dice-d20 text-base"></i>
-      <span>ทอยเต๋า</span>
-    </button>
-  </nav>
-
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 shadow-2xl text-xs">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-        <h3 class="font-bold text-amber-400 flex items-center gap-1.5">
-          <i class="fa-solid fa-gear"></i> ตั้งค่า API & ระบบเกม
-        </h3>
-        <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-slate-100 text-sm px-1">&times;</button>
-      </div>
-      <div>
-        <label class="block text-slate-400 mb-1">Gemini API Key:</label>
-        <input type="password" id="apiKeyInputModal" placeholder="วาง API Key ที่นี่" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 focus:border-amber-500 outline-none">
-      </div>
-      <div>
-        <label class="block text-slate-400 mb-1">โมเดล AI:</label>
-        <select id="modelSelector" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-slate-200 outline-none">
-          <option value="gemini-3.5-flash-lite" selected>3.5 Flash-Lite (คำตอบเร็วสุด / เสถียร)</option>
-          <option value="gemini-3.8-flash">3.8 Flash (ความช่วยเหลือรอบด้าน)</option>
-          <option value="gemini-3.1-pro-preview">3.1 Pro (การให้เหตุผลขั้นสูง / บทบาทสมมติ)</option>
-        </select>
-      </div>
-      <div class="flex justify-between items-center pt-2 border-t border-slate-800">
-        <button onclick="clearAdventureData()" class="text-rose-400 hover:underline">รีเซ็ตเนื้อเรื่อง</button>
-        <button onclick="saveApiKeyModal()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded transition">บันทึก</button>
-      </div>
+    <!-- แก้ข้อ 5: ปุ่มพักอยู่ในการ์ดตัวละคร ใช้ได้ทั้ง PC และมือถือ -->
+    <div class="grid grid-cols-2 gap-1.5 mt-2.5">
+      <button onclick="takeShortRest()" class="bg-slate-900 hover:bg-slate-700 text-amber-300 border border-slate-700 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-mug-hot mr-1"></i>Short Rest</button>
+      <button onclick="takeLongRest()" class="bg-slate-900 hover:bg-slate-700 text-emerald-400 border border-slate-700 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-bed mr-1"></i>Long Rest</button>
     </div>
   </div>
 
-  <script>
-    let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
-    let savedModel = localStorage.getItem("SOLO_DND_MODEL") || "gemini-3.5-flash-lite";
-    let chatHistory = [];
-    const MAX_HISTORY_TURNS = 8;
+  <div class="flex bg-slate-950/80 p-1 rounded-lg border border-slate-800 flex-shrink-0 text-xs">
+    <button onclick="switchSidebarSubTab('stats')" id="subTabStatsBtn" class="flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold"><i class="fa-solid fa-suitcase mr-1"></i> ของ & การทอย</button>
+    <button onclick="switchSidebarSubTab('lore')" id="subTabLoreBtn" class="flex-1 py-1 rounded text-slate-400"><i class="fa-solid fa-book-atlas mr-1"></i> Lore & ตัวตน</button>
+  </div>
 
-    // Mobile Navigation Handling
-    window.switchMobileTab = (tab) => {
-      const charPane = document.getElementById("characterPane");
-      const storyPane = document.getElementById("storyPane");
-      const tabStoryBtn = document.getElementById("tabStoryBtn");
-      const tabCharBtn = document.getElementById("tabCharBtn");
+  <div id="subTabStatsPane" class="flex-1 flex flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
+    <div id="pcDiceCard" class="hidden md:flex flex-col bg-slate-800/50 rounded-xl p-2.5 border border-slate-800 gap-1.5">
+      <div class="flex justify-between items-center text-xs">
+        <span class="text-[10px] text-slate-400 font-semibold">🎲 Dice Tool (PC)</span>
+        <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
+          <option value="20" selected>d20</option><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option>
+        </select>
+        <input type="number" id="diceModPC" value="2" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center">
+        <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="advCheckPC" class="accent-amber-500"> Adv</label>
+        <button onclick="executeRoll('PC')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1 rounded text-xs">ทอยเต๋า</button>
+      </div>
+    </div>
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[110px]">
+      <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-briefcase mr-1"></i> กระเป๋าไอเทม</span>
+      <textarea id="charInventory" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
+    </div>
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[90px]">
+      <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-users mr-1"></i> สหายปาร์ตี้ (NPC)</span>
+      <textarea id="charParty" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="พรรคพวก..."></textarea>
+    </div>
+  </div>
 
-      if (tab === "char") {
-        charPane.classList.remove("hidden");
-        storyPane.classList.add("hidden");
-        tabCharBtn.className = "flex flex-col items-center text-amber-400 text-xs gap-0.5";
-        tabStoryBtn.className = "flex flex-col items-center text-slate-400 text-xs gap-0.5";
-      } else {
-        charPane.classList.add("hidden");
-        storyPane.classList.remove("hidden");
-        tabStoryBtn.className = "flex flex-col items-center text-amber-400 text-xs gap-0.5";
-        tabCharBtn.className = "flex flex-col items-center text-slate-400 text-xs gap-0.5";
-      }
+  <div id="subTabLorePane" class="flex-1 hidden flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[120px]">
+      <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-user-tag mr-1"></i> บุคลิก & ภูมิหลัง</span>
+      <textarea id="charPersonality" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()">คุณหนูตระกูลสูงศักดิ์ ผู้รักเกียรติยศและความสง่างาม ปฏิเสธความช่วยเหลือจากตระกูลเพื่อพิสูจน์ชัยชนะด้วยตนเอง เป็นคนปากร้ายใจดี เกลียดความอยุติธรรมและการดูถูก</textarea>
+    </div>
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[140px]">
+      <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-earth-americas mr-1"></i> ข้อมูลโลก & แคมเปญ</span>
+      <textarea id="worldLore" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()">แคมเปญ: The Gilded Pride of Silvermist (ดินแดนหุบเขาซิลเวอร์มิสต์ ถูกปกคลุมด้วยสายหมอกเวทมนตร์ มีซากอารยธรรมจักรวรรดิเก่า มีพวกสลัดหมอกออกปล้นสะดม และมีอันตรายจากสัตว์อสูรสายหมอก)</textarea>
+    </div>
+  </div>
+</aside>
+
+<section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10">
+  <div id="narrativeBox" class="flex-1 p-3.5 sm:p-5 overflow-y-auto chat-scroll flex flex-col gap-3.5 max-w-4xl mx-auto w-full">
+    <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
+      <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
+      <div class="text-xs sm:text-sm leading-relaxed text-slate-200">ยินดีต้อนรับสู่แคมเปญ Solo DnD! กดชอยส์ที่ DM เสนอ หรือพิมพ์การกระทำอิสระของคุณเอง แล้ว DM จะกำหนดค่า DC ให้ทอยเต๋าตัดสินผลครับ</div>
+    </div>
+  </div>
+
+  <div class="px-3 py-2 bg-slate-900/90 border-t border-slate-800/80">
+    <div class="max-w-4xl mx-auto flex gap-2 overflow-x-auto md:grid md:grid-cols-4 chat-scroll">
+      <button onclick="triggerQuickAction('ฉันขอตรวจสอบพื้นที่รอบตัวอย่างละเอียด เพื่อหาเบาะแส ร่องรอย หรือกลิ่นอายเวทมนตร์')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-magnifying-glass text-sky-400 mr-1"></i>สำรวจพื้นที่</button>
+      <button onclick="usePrideAdvantage()" class="bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/50 px-3 py-2 rounded-lg text-xs whitespace-nowrap font-semibold"><i class="fa-solid fa-crown text-amber-400 mr-1"></i>ใช้ Pride (Adv)</button>
+      <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือก 2-3 ข้อตามกฎ DnD พร้อมระบุค่า DC ที่ต้องทอยสำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>ขอช้อยส์ + DC</button>
+      <button onclick="triggerQuickAction('ฉันตั้งท่าชักดาบเรเปียร์เตรียมพร้อมต่อสู้ ท้าทายศัตรูอย่างสง่างาม')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-shield-halved text-rose-400 mr-1"></i>ตั้งท่าต่อสู้</button>
+    </div>
+  </div>
+
+  <div class="p-3 bg-slate-900 border-t border-slate-800 flex-shrink-0">
+    <div class="max-w-4xl mx-auto flex gap-2 items-center">
+      <textarea id="playerInput" rows="1" placeholder="พิมพ์การกระทำอิสระ... (Enter เพื่อส่ง)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3.5 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-amber-500 resize-none"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();sendAction();}"></textarea>
+      <button onclick="sendAction()" id="sendBtn" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-1.5 flex-shrink-0"><span>ส่ง</span><i class="fa-solid fa-paper-plane text-xs"></i></button>
+    </div>
+  </div>
+</section>
+
+<div id="dicePane" class="fixed inset-x-4 top-20 z-40 bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-2xl hidden md:hidden flex-col gap-2.5">
+  <div class="flex justify-between items-center pb-1 border-b border-slate-800">
+    <span class="text-xs font-bold text-amber-300"><i class="fa-solid fa-dice-d20 mr-1"></i> กล่องทอยเต๋า</span>
+    <button onclick="toggleDicePane()" class="text-slate-400 text-lg px-1.5">&times;</button>
+  </div>
+  <div class="flex items-center gap-1.5">
+    <select id="diceTypeMobile" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
+      <option value="20" selected>d20</option><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option>
+    </select>
+    <input type="number" id="diceModMobile" value="2" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center">
+    <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="advCheckMobile" class="accent-amber-500"> Adv</label>
+  </div>
+  <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs">🎲 ทอยเต๋าเดี๋ยวนี้</button>
+  <div id="diceOutputMobile" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
+</div>
+</main>
+
+<nav class="md:hidden bg-slate-900 border-t border-slate-800 flex justify-around py-2 z-30 flex-shrink-0">
+  <button onclick="switchMobileTab('story')" id="tabStoryBtn" class="flex flex-col items-center text-amber-400 text-xs gap-0.5"><i class="fa-solid fa-book-open text-base"></i><span>เนื้อเรื่อง</span></button>
+  <button onclick="switchMobileTab('char')" id="tabCharBtn" class="flex flex-col items-center text-slate-400 text-xs gap-0.5"><i class="fa-solid fa-user-shield text-base"></i><span>ตัวละคร / Lore</span></button>
+  <button onclick="toggleDicePane()" class="flex flex-col items-center text-amber-400 text-xs gap-0.5"><i class="fa-solid fa-dice-d20 text-base"></i><span>ทอยเต๋า</span></button>
+</nav>
+
+<div id="settingsModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 shadow-2xl text-xs">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+      <h3 class="font-bold text-amber-400"><i class="fa-solid fa-gear mr-1"></i> ตั้งค่า API & ระบบเกม</h3>
+      <button onclick="toggleSettingsModal()" class="text-slate-400 text-lg px-1">&times;</button>
+    </div>
+    <div>
+      <label class="block text-slate-400 mb-1">Gemini API Key:</label>
+      <input type="password" id="apiKeyInputModal" placeholder="วาง API Key ที่นี่" class="w-full bg-slate-950 border border-slate-700 rounded p-2 focus:border-amber-500 outline-none">
+    </div>
+    <div>
+      <label class="block text-slate-400 mb-1">โมเดล AI (พิมพ์ชื่อเองได้):</label>
+      <input id="modelSelector" list="modelList" class="w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none focus:border-amber-500">
+      <datalist id="modelList">
+        <option value="gemini-3.5-flash-lite"><option value="gemini-3.8-flash"><option value="gemini-3.1-pro-preview">
+      </datalist>
+    </div>
+    <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+      <button onclick="clearAdventureData()" class="text-rose-400 hover:underline">รีเซ็ตเนื้อเรื่อง</button>
+      <button onclick="saveApiKeyModal()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const PRIDE_MAX = 2;
+const MAX_HISTORY_TURNS = 8;
+const DEFAULT_MODEL = "gemini-3.5-flash-lite";
+let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
+let savedModel = localStorage.getItem("SOLO_DND_MODEL") || DEFAULT_MODEL;
+let chatHistory = [];
+
+// แก้ข้อ 3: escape HTML ก่อนแสดงผลทุกครั้ง
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const SYSTEM_RULES = `คุณคือ Dungeon Master (DM) มืออาชีพสำหรับ DnD 5e Solo Tabletop RPG
+1. คุมเนื้อเรื่องให้อยู่ในกรอบ [Lore] เสมอ และให้ NPC/สถานการณ์ตอบสนองต่อ [บุคลิก] ของตัวละครอย่างสมจริง
+2. ผู้เล่นพิมพ์การกระทำอิสระได้ ให้ประเมินตามกฎ DnD หากเสี่ยง/ท้าทาย/ต่อสู้ ห้ามสรุปผลทันที ให้สั่งทอยเต๋าพร้อมระบุ DC (หรือ AC ศัตรู) เช่น "กรุณาทอย d20 + Athletics (DC 14)"
+3. ประเมิน [ผลทอยเต๋า]: แต้ม >= DC สำเร็จ, < DC ล้มเหลวและเกิดผลเสีย, 20 แท้ = สำเร็จเกินคาด, 1 แท้ = ล้มเหลววิกฤต
+4. ท้ายคำบรรยายเสนอทางเลือก 2-3 ข้อ พร้อม DC เสมอ ในรูปแบบ:
+[ชอยส์ 1]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
+[ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
+5. หาก HP เปลี่ยนหรือได้ไอเทม/สหาย ให้ใส่ท้ายคำตอบ:
+<<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>`;
+
+function buildSystemInstruction() {
+  // ย้าย snapshot มาไว้ที่ systemInstruction ส่งครั้งเดียวต่อคำขอ ไม่ซ้ำใน history
+  const v = id => $(id).value.replace(/\n/g, ', ');
+  return `${SYSTEM_RULES}
+
+[ตัวละคร: ${v("charName")} | คลาส: ${v("charClass")} | HP: ${v("currentHp")}/${v("maxHp")} | AC: ${v("charAc")} | ไอเทม: ${v("charInventory")} | ปาร์ตี้: ${v("charParty")}]
+[บุคลิก]: ${v("charPersonality")}
+[Lore]: ${v("worldLore")}`;
+}
+
+// ---------- Navigation ----------
+function setTabStyle(btn, active) {
+  btn.className = `flex flex-col items-center ${active ? "text-amber-400" : "text-slate-400"} text-xs gap-0.5`;
+}
+window.switchMobileTab = tab => {
+  const isChar = tab === "char";
+  $("characterPane").classList.toggle("hidden", !isChar);
+  $("storyPane").classList.toggle("hidden", isChar);
+  setTabStyle($("tabCharBtn"), isChar);
+  setTabStyle($("tabStoryBtn"), !isChar);
+};
+// กัน storyPane ค้างซ่อนเมื่อขยายจอข้าม 768px
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 768) {
+    $("storyPane").classList.remove("hidden");
+    $("dicePane").classList.add("hidden");
+    $("dicePane").classList.remove("flex");
+  } else if ($("characterPane").classList.contains("hidden") === false && !$("storyPane").classList.contains("hidden")) {
+    $("characterPane").classList.add("hidden");
+  }
+});
+window.switchSidebarSubTab = sub => {
+  const lore = sub === "lore";
+  $("subTabStatsPane").classList.toggle("hidden", lore);
+  $("subTabStatsPane").classList.toggle("flex", !lore);
+  $("subTabLorePane").classList.toggle("hidden", !lore);
+  $("subTabLorePane").classList.toggle("flex", lore);
+  const on = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold";
+  const off = "flex-1 py-1 rounded text-slate-400";
+  $("subTabLoreBtn").className = lore ? on : off;
+  $("subTabStatsBtn").className = lore ? off : on;
+};
+window.toggleDicePane = () => { $("dicePane").classList.toggle("hidden"); $("dicePane").classList.toggle("flex"); };
+window.toggleSettingsModal = () => {
+  $("apiKeyInputModal").value = apiKey;
+  $("modelSelector").value = savedModel;
+  $("settingsModal").classList.toggle("hidden");
+  $("settingsModal").classList.toggle("flex");
+};
+window.saveApiKeyModal = () => {
+  const k = $("apiKeyInputModal").value.trim();
+  const m = $("modelSelector").value.trim() || DEFAULT_MODEL;
+  if (k) { localStorage.setItem("SOLO_DND_KEY", k); apiKey = k; }
+  localStorage.setItem("SOLO_DND_MODEL", m); savedModel = m;
+  alert("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
+  toggleSettingsModal();
+};
+
+// ---------- Avatar ----------
+window.handleAvatarCompress = e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 180; let w = img.width, h = img.height;
+      if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+      else if (h > max) { w = Math.round(w * max / h); h = max; }
+      const c = document.createElement("canvas"); c.width = w; c.height = h;
+      c.getContext("2d").drawImage(img, 0, 0, w, h);
+      const data = c.toDataURL("image/jpeg", 0.65);
+      $("charAvatar").src = data;
+      $("charAvatar").classList.remove("hidden");
+      $("avatarPlaceholder").classList.add("hidden");
+      try { localStorage.setItem("DND_AVATAR", data); } catch (err) { console.warn(err); }
     };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
 
-    // Sidebar Sub-Tab Switcher (จัดการหน้าจอ PC ให้พอดี)
-    window.switchSidebarSubTab = (subTab) => {
-      const statsPane = document.getElementById("subTabStatsPane");
-      const lorePane = document.getElementById("subTabLorePane");
-      const btnStats = document.getElementById("subTabStatsBtn");
-      const btnLore = document.getElementById("subTabLoreBtn");
+// ---------- Rest / Pride ----------
+window.takeShortRest = () => {
+  const cur = parseInt($("currentHp").value) || 0;
+  const max = parseInt($("maxHp").value) || 12;
+  const heal = Math.floor(Math.random() * 8) + 3;
+  const next = Math.min(max, cur + heal);
+  $("currentHp").value = next; saveSheet();
+  appendMessage("System", `Short Rest: HP +${heal} (${next}/${max})`, "system");
+  switchMobileTab("story");
+  sendDirectAction(`ฉันหาที่กำบังและพักฟื้นระยะสั้น (HP เป็น ${next}/${max})`);
+};
+window.takeLongRest = () => {
+  const max = parseInt($("maxHp").value) || 12;
+  $("currentHp").value = max; $("charPride").value = PRIDE_MAX; saveSheet();
+  appendMessage("System", `Long Rest: HP เต็ม (${max}/${max}) และฟื้นฟู Pride`, "system");
+  switchMobileTab("story");
+  sendDirectAction("ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)");
+};
+window.usePrideAdvantage = () => {
+  let pride = parseInt($("charPride").value) || 0;
+  if (pride <= 0) { alert("ไม่มีแต้ม Pride เหลือ (ต้อง Long Rest)"); return; }
+  $("charPride").value = --pride; saveSheet();
+  $("advCheckPC").checked = true; $("advCheckMobile").checked = true;
+  appendMessage("System", `ใช้ Pride! (เหลือ ${pride}) การทอย d20 ครั้งถัดไปจะได้ Advantage`, "system");
+  openDiceUI();
+};
+function openDiceUI() {
+  if (window.innerWidth >= 768) {
+    switchSidebarSubTab("stats");
+    const card = $("pcDiceCard");
+    card.classList.add("ring-2", "ring-amber-400");
+    setTimeout(() => card.classList.remove("ring-2", "ring-amber-400"), 1200);
+  } else {
+    $("dicePane").classList.remove("hidden"); $("dicePane").classList.add("flex");
+  }
+}
 
-      if (subTab === 'lore') {
-        statsPane.classList.add("hidden");
-        statsPane.classList.remove("flex");
-        lorePane.classList.remove("hidden");
-        lorePane.classList.add("flex");
-        btnLore.className = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold transition";
-        btnStats.className = "flex-1 py-1 rounded text-slate-400 hover:text-slate-200 transition";
-      } else {
-        lorePane.classList.add("hidden");
-        lorePane.classList.remove("flex");
-        statsPane.classList.remove("hidden");
-        statsPane.classList.add("flex");
-        btnStats.className = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold transition";
-        btnLore.className = "flex-1 py-1 rounded text-slate-400 hover:text-slate-200 transition";
-      }
-    };
+// ---------- Dice (แก้ข้อ 1: ตรวจ Crit จากลูกที่เลือกจริง) ----------
+window.executeRoll = device => {
+  const s = device === "PC" ? "PC" : "Mobile";
+  const sides = parseInt($(`diceType${s}`).value);
+  const mod = parseInt($(`diceMod${s}`).value) || 0;
+  const adv = $(`advCheck${s}`).checked;
+  const roll = () => Math.floor(Math.random() * sides) + 1;
 
-    window.toggleDicePane = () => {
-      const pane = document.getElementById("dicePane");
-      pane.classList.toggle("hidden");
-      pane.classList.toggle("flex");
-    };
+  const r1 = roll();
+  let chosen = r1, desc = `d${sides}(${r1})`;
+  if (adv && sides === 20) {
+    const r2 = roll();
+    chosen = Math.max(r1, r2);
+    desc = `Adv [${r1}, ${r2}] -> ${chosen}`;
+  }
+  if (adv) { $("advCheckPC").checked = false; $("advCheckMobile").checked = false; } // รีเซ็ต Adv เสมอ
+  const total = chosen + mod;
 
-    window.toggleSettingsModal = () => {
-      const modal = document.getElementById("settingsModal");
-      document.getElementById("apiKeyInputModal").value = apiKey;
-      document.getElementById("modelSelector").value = savedModel;
-      modal.classList.toggle("hidden");
-      modal.classList.toggle("flex");
-    };
+  let crit = "";
+  if (sides === 20) {
+    if (chosen === 20) crit = " 🔥 CRITICAL SUCCESS (20 ธรรมชาติ)!";
+    else if (chosen === 1) crit = " 💀 CRITICAL FAIL (1 ธรรมชาติ)!";
+  }
+  const res = `${desc} ${mod >= 0 ? "+" : ""}${mod} = ${total}${crit}`;
+  $(`diceOutput${s}`).innerText = res;
 
-    window.saveApiKeyModal = () => {
-      const keyVal = document.getElementById("apiKeyInputModal").value.trim();
-      const modelVal = document.getElementById("modelSelector").value;
-      
-      if (keyVal) {
-        localStorage.setItem("SOLO_DND_KEY", keyVal);
-        apiKey = keyVal;
-      }
-      localStorage.setItem("SOLO_DND_MODEL", modelVal);
-      savedModel = modelVal;
-      
-      alert("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
-      toggleSettingsModal();
-    };
+  const input = $("playerInput");
+  const action = input.value.replace(/\[ผลทอยเต๋า:.*?\]\s*/g, "").trim();
+  input.value = `[ผลทอยเต๋า: ${res}] ${action}`;
+  if (device === "Mobile") { switchMobileTab("story"); toggleDicePane(); } else input.focus();
+};
 
-    window.handleAvatarCompress = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+// ---------- Choices ----------
+window.selectChoice = text => {
+  $("playerInput").value = `ฉันเลือก: ${text}`;
+  if (/DC|d20|ทอย/.test(text)) openDiceUI(); else sendAction();
+};
+// แก้ข้อ 2: event delegation + data-choice แทน inline onclick
+$("narrativeBox").addEventListener("click", e => {
+  const b = e.target.closest("[data-choice]");
+  if (b) selectChoice(b.dataset.choice);
+});
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const maxDim = 180;
-          let w = img.width, h = img.height;
-          if (w > h && w > maxDim) { h = Math.round((h * maxDim) / w); w = maxDim; }
-          else if (h > maxDim) { w = Math.round((w * maxDim) / h); h = maxDim; }
+window.triggerQuickAction = t => sendDirectAction(t);
 
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, w, h);
+// ---------- Save / Load ----------
+const FIELDS = {name:"charName", class:"charClass", personality:"charPersonality", lore:"worldLore", hp:"currentHp", maxHp:"maxHp", ac:"charAc", speed:"charSpeed", pride:"charPride", inventory:"charInventory", party:"charParty"};
+window.saveSheet = () => {
+  const d = {}; for (const k in FIELDS) d[k] = $(FIELDS[k]).value;
+  try { localStorage.setItem("DND_SHEET_DATA_V2", JSON.stringify(d)); } catch (e) { console.warn(e); }
+};
+function loadSavedSheet() {
+  try {
+    const d = JSON.parse(localStorage.getItem("DND_SHEET_DATA_V2") || "null");
+    if (d) for (const k in FIELDS) if (d[k] !== undefined && d[k] !== null) $(FIELDS[k]).value = d[k];
+  } catch (e) {}
+  const av = localStorage.getItem("DND_AVATAR");
+  if (av) { $("charAvatar").src = av; $("charAvatar").classList.remove("hidden"); $("avatarPlaceholder").classList.add("hidden"); }
+}
+window.clearAdventureData = () => {
+  if (!confirm("ต้องการรีเซ็ตประวัติการเล่นทั้งหมดหรือไม่?")) return;
+  chatHistory = []; msgLog = [];
+  $("narrativeBox").innerHTML = "";
+  appendMessage("Dungeon Master", "ประวัติถูกรีเซ็ตแล้ว เริ่มการผจญภัยครั้งใหม่ได้เลย!", "dm");
+  toggleSettingsModal();
+};
 
-          const compressed = canvas.toDataURL("image/jpeg", 0.65);
-          document.getElementById("charAvatar").src = compressed;
-          document.getElementById("charAvatar").classList.remove("hidden");
-          document.getElementById("avatarPlaceholder").classList.add("hidden");
-          try {
-            localStorage.setItem("DND_AVATAR", compressed);
-          } catch(err) {
-            console.warn("Storage quota exceeded", err);
-          }
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    };
+window.sendAction = () => {
+  const input = $("playerInput");
+  const t = input.value.trim(); if (!t) return;
+  input.value = ""; sendDirectAction(t);
+};
 
-    window.takeShortRest = () => {
-      const cur = parseInt(document.getElementById("currentHp").value) || 0;
-      const max = parseInt(document.getElementById("maxHp").value) || 12;
-      const heal = Math.floor(Math.random() * 8) + 1 + 2;
-      const nextHp = Math.min(max, cur + heal);
-      document.getElementById("currentHp").value = nextHp;
-      saveSheet();
-      appendMessage("System", `พักฟื้นระยะสั้น (Short Rest): ได้รับ HP +${heal} (ปัจจุบัน: ${nextHp}/${max})`, "system");
-      triggerQuickAction(`ฉันหาที่กำบังและพักฟื้นระยะสั้น (HP เป็น ${nextHp}/${max})`);
-    };
+// ---------- API ----------
+async function executeApiCall(url, body) {
+  const opts = { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey }, body: JSON.stringify(body) };
+  let r = await fetch(url, opts);
+  if (r.status === 503 || r.status === 429) { await new Promise(x => setTimeout(x, 1500)); r = await fetch(url, opts); }
+  return r;
+}
 
-    window.takeLongRest = () => {
-      const max = parseInt(document.getElementById("maxHp").value) || 12;
-      document.getElementById("currentHp").value = max;
-      document.getElementById("charPride").value = 2;
-      saveSheet();
-      appendMessage("System", `พักผ่อนยาว (Long Rest): HP เต็ม (${max}/${max}) รีเซ็ตแต้ม Pride เรียบร้อย`, "system");
-      triggerQuickAction(`ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)`);
-    };
+async function sendDirectAction(text) {
+  if (!apiKey) { toggleSettingsModal(); return; }
+  appendMessage($("charName").value || "Player", text, "player");
+  const sendBtn = $("sendBtn"); sendBtn.disabled = true; sendBtn.classList.add("opacity-50");
 
-    // ใช้แต้ม Pride เพื่อขอ Advantage (รองรับทั้ง PC และ Mobile อย่างแม่นยำ)
-    window.usePrideAdvantage = () => {
-      let pride = parseInt(document.getElementById("charPride").value) || 0;
-      if (pride <= 0) {
-        alert("คุณไม่มีแต้ม Pride เหลือแล้ว (ต้อง Long Rest เพื่อฟื้นฟู)");
-        return;
-      }
-      pride -= 1;
-      document.getElementById("charPride").value = pride;
-      saveSheet();
-      
-      document.getElementById("advCheckPC").checked = true;
-      document.getElementById("advCheckMobile").checked = true;
-      appendMessage("System", `ใช้แต้ม Pride! (เหลือ ${pride}) การทอยเต๋าครั้งถัดไปจะได้รับ Advantage (ทอย 2 ลูกเลือกแต้มสูงสุด)`, "system");
-      
-      // บน PC ไฮไลต์การ์ดทอยเต๋า / บนมือถือเปิดกล่องทอย
-      if (window.innerWidth >= 768) {
-        switchSidebarSubTab('stats');
-        const pcCard = document.getElementById("pcDiceCard");
-        pcCard.classList.add("ring-2", "ring-amber-400");
-        setTimeout(() => pcCard.classList.remove("ring-2", "ring-amber-400"), 1200);
-      } else {
-        const pane = document.getElementById("dicePane");
-        pane.classList.remove("hidden");
-        pane.classList.add("flex");
-      }
-    };
+  if (chatHistory.length > MAX_HISTORY_TURNS * 2) chatHistory = chatHistory.slice(-MAX_HISTORY_TURNS * 2);
+  while (chatHistory.length && chatHistory[0].role !== "user") chatHistory.shift(); // history ต้องขึ้นต้นด้วย user
+  chatHistory.push({ role: "user", parts: [{ text }] });
 
-    // Unified Dice Roller
-    window.executeRoll = (device) => {
-      const suffix = device === 'PC' ? 'PC' : 'Mobile';
-      const sides = parseInt(document.getElementById(`diceType${suffix}`).value);
-      const mod = parseInt(document.getElementById(`diceMod${suffix}`).value) || 0;
-      const adv = document.getElementById(`advCheck${suffix}`).checked;
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(savedModel || DEFAULT_MODEL)}:generateContent`;
+    const response = await executeApiCall(url, {
+      contents: chatHistory,
+      systemInstruction: { parts: [{ text: buildSystemInstruction() }] },
+      generationConfig: { temperature: 0.8 }
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || "เรียก API ไม่สำเร็จ");
+    if (data.promptFeedback?.blockReason) throw new Error("ถูกบล็อกโดยระบบความปลอดภัย: " + data.promptFeedback.blockReason);
 
-      let r1 = Math.floor(Math.random() * sides) + 1;
-      let total = r1 + mod;
-      let desc = `d${sides}(${r1})`;
+    const cand = data.candidates?.[0];
+    let reply = (cand?.content?.parts || []).filter(p => !p.thought && p.text).map(p => p.text).join("").trim();
+    if (!reply) throw new Error("DM ไม่ตอบกลับ" + (cand?.finishReason ? ` (${cand.finishReason})` : ""));
 
-      if (adv && sides === 20) {
-        let r2 = Math.floor(Math.random() * sides) + 1;
-        let chosen = Math.max(r1, r2);
-        total = chosen + mod;
-        desc = `Adv [${r1}, ${r2}] -> ${chosen}`;
-        // รีเซ็ต Adv ทั้งสองอุปกรณ์
-        document.getElementById("advCheckPC").checked = false;
-        document.getElementById("advCheckMobile").checked = false;
-      }
-
-      let critNotice = "";
-      if (sides === 20) {
-        if (r1 === 20) critNotice = " 🔥 CRITICAL SUCCESS (20 ธรรมชาติ)!";
-        else if (r1 === 1) critNotice = " 💀 CRITICAL FAIL (1 ธรรมชาติ)!";
-      }
-
-      const resText = `${desc} ${mod >= 0 ? '+' : ''}${mod} = ${total}${critNotice}`;
-      document.getElementById(`diceOutput${suffix}`).innerText = resText;
-
-      const input = document.getElementById("playerInput");
-      const currentAction = input.value.replace(/\[ผลทอยเต๋า:.*?\]\s*/g, '').trim();
-      input.value = `[ผลทอยเต๋า: ${resText}] ${currentAction}`;
-      
-      if (device === 'Mobile') {
-        switchMobileTab('story');
-        toggleDicePane();
-      } else {
-        input.focus();
-      }
-    };
-
-    // เมื่อผู้เล่นแตะชอยส์ที่ DM ให้มา
-    window.selectChoice = (choiceText) => {
-      const input = document.getElementById("playerInput");
-      input.value = `ฉันเลือก: ${choiceText}`;
-      
-      if (choiceText.includes("DC") || choiceText.includes("d20") || choiceText.includes("ทอย")) {
-        if (window.innerWidth < 768) {
-          const pane = document.getElementById("dicePane");
-          pane.classList.remove("hidden");
-          pane.classList.add("flex");
-        } else {
-          switchSidebarSubTab('stats');
-          const pcCard = document.getElementById("pcDiceCard");
-          pcCard.classList.add("ring-2", "ring-amber-400");
-          setTimeout(() => pcCard.classList.remove("ring-2", "ring-amber-400"), 1200);
-        }
-      } else {
-        sendAction();
-      }
-    };
-
-    window.triggerQuickAction = (text) => {
-      sendDirectAction(text);
-    };
-
-    window.saveSheet = () => {
-      const data = {
-        name: document.getElementById("charName").value,
-        class: document.getElementById("charClass").value,
-        personality: document.getElementById("charPersonality").value,
-        lore: document.getElementById("worldLore").value,
-        hp: document.getElementById("currentHp").value,
-        maxHp: document.getElementById("maxHp").value,
-        ac: document.getElementById("charAc").value,
-        speed: document.getElementById("charSpeed").value,
-        pride: document.getElementById("charPride").value,
-        inventory: document.getElementById("charInventory").value,
-        party: document.getElementById("charParty").value
-      };
+    const m = reply.match(/<<<STATUS_SYNC:\s*([\s\S]*?)>>>/);
+    if (m) {
       try {
-        localStorage.setItem("DND_SHEET_DATA_V2", JSON.stringify(data));
-      } catch(e) {
-        console.warn("Local storage write failed", e);
-      }
-    };
-
-    function loadSavedSheet() {
-      const saved = localStorage.getItem("DND_SHEET_DATA_V2");
-      if (saved) {
-        try {
-          const d = JSON.parse(saved);
-          if (d.name) document.getElementById("charName").value = d.name;
-          if (d.class) document.getElementById("charClass").value = d.class;
-          if (d.personality) document.getElementById("charPersonality").value = d.personality;
-          if (d.lore) document.getElementById("worldLore").value = d.lore;
-          if (d.hp) document.getElementById("currentHp").value = d.hp;
-          if (d.maxHp) document.getElementById("maxHp").value = d.maxHp;
-          if (d.ac) document.getElementById("charAc").value = d.ac;
-          if (d.speed) document.getElementById("charSpeed").value = d.speed;
-          if (d.pride) document.getElementById("charPride").value = d.pride;
-          if (d.inventory) document.getElementById("charInventory").value = d.inventory;
-          if (d.party) document.getElementById("charParty").value = d.party;
-        } catch(e) {}
-      }
-      const avatar = localStorage.getItem("DND_AVATAR");
-      if (avatar) {
-        const img = document.getElementById("charAvatar");
-        img.src = avatar;
-        img.classList.remove("hidden");
-        document.getElementById("avatarPlaceholder").classList.add("hidden");
-      }
-      
-      const modelSelect = document.getElementById("modelSelector");
-      if (modelSelect && savedModel) {
-        modelSelect.value = savedModel;
-      }
+        const j = m[1].trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+        const sync = JSON.parse(j);
+        const bullet = s => String(s).replace(/^[•\-*]\s*/, "");
+        const append = (id, v) => { const el = $(id); el.value = (el.value.trim() ? el.value.trim() + "\n" : "") + "• " + bullet(v); };
+        if (sync.hp !== undefined && !isNaN(parseInt(sync.hp))) $("currentHp").value = sync.hp;
+        if (sync.addItem) append("charInventory", sync.addItem);
+        if (sync.addParty) append("charParty", sync.addParty);
+        saveSheet();
+      } catch (e) { console.warn("sync parse error", e); }
+      reply = reply.replace(/<<<STATUS_SYNC:\s*[\s\S]*?>>>/, "").trim();
     }
+    chatHistory.push({ role: "model", parts: [{ text: reply }] });
+    appendMessage("Dungeon Master", reply, "dm");
+  } catch (err) {
+    console.error(err);
+    chatHistory.pop(); // แก้ข้อ 4: ถอนข้อความ user ที่ยังไม่ได้คำตอบ
+    appendMessage("System Alert", "เกิดข้อผิดพลาด: " + err.message, "system");
+  } finally {
+    sendBtn.disabled = false; sendBtn.classList.remove("opacity-50");
+    saveStory();
+  }
+}
 
-    window.clearAdventureData = () => {
-      if (confirm("ต้องการรีเซ็ตประวัติการเล่นทั้งหมดหรือไม่?")) {
-        chatHistory = [];
-        document.getElementById("narrativeBox").innerHTML = `
-          <div class="bg-slate-900 border-l-4 border-amber-500 p-3.5 rounded-r-lg max-w-3xl shadow">
-            <p class="font-bold text-amber-300 text-xs mb-1">Dungeon Master</p>
-            <div class="text-xs sm:text-sm text-slate-200">ประวัติถูกรีเซ็ตแล้ว เริ่มต้นการผจญภัยครั้งใหม่ได้เลย!</div>
-          </div>`;
-        toggleSettingsModal();
-      }
-    };
+// ---------- Render ----------
+function appendMessage(sender, text, type, persist = true) {
+  const box = $("narrativeBox");
+  const div = document.createElement("div");
+  const safeSender = escapeHtml(sender);
+  const safe = escapeHtml(text);
 
-    window.sendAction = () => {
-      const input = document.getElementById("playerInput");
-      const text = input.value.trim();
-      if (!text) return;
-      input.value = "";
-      sendDirectAction(text);
-    };
+  if (type === "player") {
+    div.className = "bg-slate-800 self-end p-2.5 sm:p-3 rounded-l-lg rounded-tr-lg max-w-[85%] border border-slate-700 shadow text-xs";
+    div.innerHTML = `<p class="font-bold text-amber-400 text-[10px] mb-0.5 text-right">${safeSender}</p><div class="text-slate-100 whitespace-pre-wrap">${safe}</div>`;
+  } else if (type === "dm") {
+    div.className = "bg-slate-900 border-l-4 border-amber-500 p-3 sm:p-4 rounded-r-lg max-w-[95%] shadow text-xs";
+    const html = safe
+      .replace(/\[ชอยส์\s*\d+\]:\s*([^\n]+)/g, (_, c) => {
+        const label = c.replace(/\*\*/g, "");
+        return `<button data-choice="${label}" class="choice-btn text-left w-full my-1.5 p-2.5 bg-slate-950/80 border border-amber-500/40 rounded-lg text-amber-300 transition flex items-center justify-between"><span>👉 ${label}</span><i class="fa-solid fa-dice-d20 text-amber-400 text-sm ml-2"></i></button>`;
+      })
+      .replace(/\*\*([^*\n]+)\*\*/g, "<strong class='text-amber-200'>$1</strong>");
+    div.innerHTML = `<p class="font-bold text-amber-300 text-[10px] mb-1.5"><i class="fa-solid fa-dungeon mr-1"></i>${safeSender}</p><div class="text-slate-200 whitespace-pre-wrap leading-relaxed">${html}</div>`;
+  } else {
+    div.className = "bg-slate-900/90 border border-indigo-500/40 p-2 rounded text-indigo-200 text-xs";
+    div.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i>${safe}`;
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  if (persist) { msgLog.push({ sender, text, type }); saveStory(); }
+}
 
-    async function executeApiCall(url, body) {
-      let response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-
-      if (response.status === 503 || response.status === 429) {
-        await new Promise(r => setTimeout(r, 1500));
-        response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body)
-        });
-      }
-      return response;
+// ---------- บันทึก/กู้คืนเนื้อเรื่อง ----------
+const MAX_LOG = 200;
+let msgLog = [];
+function saveStory() {
+  if (msgLog.length > MAX_LOG) msgLog = msgLog.slice(-MAX_LOG);
+  try {
+    localStorage.setItem("DND_LOG_V1", JSON.stringify(msgLog));
+    localStorage.setItem("DND_HISTORY_V1", JSON.stringify(chatHistory));
+  } catch (e) { console.warn("Story save failed", e); }
+}
+function loadStory() {
+  try {
+    const log = JSON.parse(localStorage.getItem("DND_LOG_V1") || "[]");
+    const hist = JSON.parse(localStorage.getItem("DND_HISTORY_V1") || "[]");
+    if (Array.isArray(hist)) chatHistory = hist;
+    if (Array.isArray(log)) {
+      msgLog = log;
+      log.forEach(m => appendMessage(m.sender, m.text, m.type, false));
     }
+  } catch (e) { console.warn("Story load failed", e); }
+}
 
-    // Direct REST API with Lore & Freeform Creativity Support
-    async function sendDirectAction(text) {
-      if (!apiKey) {
-        toggleSettingsModal();
-        return;
-      }
-
-      appendMessage(document.getElementById("charName").value || "Player", text, "player");
-
-      const sendBtn = document.getElementById("sendBtn");
-      sendBtn.disabled = true;
-      sendBtn.classList.add("opacity-50");
-
-      try {
-        const currentModel = savedModel || "gemini-3.5-flash-lite";
-        
-        const charSnapshot = `[ตัวละคร: ${document.getElementById("charName").value} | คลาส: ${document.getElementById("charClass").value} | HP: ${document.getElementById("currentHp").value}/${document.getElementById("maxHp").value} | AC: ${document.getElementById("charAc").value} | ไอเทม: ${document.getElementById("charInventory").value.replace(/\n/g, ', ')} | ปาร์ตี้: ${document.getElementById("charParty").value.replace(/\n/g, ', ')}]
-[บุคลิก/อุปนิสัย: ${document.getElementById("charPersonality").value}]
-[กรอบเนื้อเรื่องโลก/Lore: ${document.getElementById("worldLore").value}]`;
-
-        if (chatHistory.length > MAX_HISTORY_TURNS * 2) {
-          chatHistory = chatHistory.slice(-MAX_HISTORY_TURNS * 2);
-        }
-
-        chatHistory.push({ role: "user", parts: [{ text: `${charSnapshot}\n\nคำสั่ง/การกระทำของผู้เล่น: ${text}` }] });
-
-        const systemInstruction = `คุณคือ Dungeon Master (DM) มืออาชีพสำหรับ DnD 5e Solo Tabletop RPG
-หน้าที่สำคัญที่สุดของคุณ:
-1. **คุมกรอบเนื้อเรื่องตาม Lore และบุคลิกตัวละคร:** 
-   - ดำเนินเรื่องให้อยู่ในกรอบ [กรอบเนื้อเรื่องโลก/Lore] เสมอ ห้ามแต่งหลุดโลก
-   - ให้ NPC และสถานการณ์ตอบสนองต่อ [บุคลิก/อุปนิสัย] ของตัวละครอย่างสมจริง
-2. **รองรับการกระทำอิสระของผู้เล่น (Player Freedom & Agency):**
-   - ผู้เล่นไม่จำเป็นต้องเลือกชอยส์ที่คุณเสนอ หากผู้เล่นพิมพ์การกระทำหรือแผนการแปลกใหม่ด้วยตัวเอง ให้คุณประเมินความเป็นไปได้ตามกฎ DnD
-   - หากการกระทำมีความเสี่ยง ท้าทาย หรือเป็นการต่อสู้ **ห้ามสรุปผลสำเร็จทันทีเด็ดขาด** ให้คุณหยุดและสั่งให้ผู้เล่นทอยเต๋าพร้อมตั้งค่า DC (หรือ AC ศัตรู) เช่น "กรุณาทอย d20 + Athletics (DC 14) เพื่องัดบานหน้าต่าง!"
-3. **การประเมินผลทอยเต๋า ([ผลทอยเต๋า: ...]):**
-   - แต้ม >= DC: สำเร็จ บรรยายผลลัพธ์ที่ดี
-   - แต้ม < DC: ล้มเหลว เกิดผลเสีย อาจโดนโจมตีสวน (HP ลด) หรือศัตรูไหวตัวทัน
-   - Critical Success (20 แท้): สำเร็จเกินคาด มีแต้มต่อพิเศษ
-   - Critical Fail (1 แท้): ความล้มเหลวขั้นวิกฤต หรือเสียจังหวะ
-4. **รูปแบบการเสนอชอยส์:** ท้ายการบรรยาย ให้เสนอทางเลือก 2-3 ข้อ โดยต้องระบุค่า DC ล่วงหน้าเสมอในรูปแบบ:
-   - [ชอยส์ 1]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
-   - [ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
-5. **การอัปเดตสเตตัส:** หาก HP เปลี่ยน หรือได้ไอเทม ให้ใส่แท็ก JSON ท้ายคำตอบ:
-   <<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>`;
-
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${apiKey}`;
-
-        const reqBody = {
-          contents: chatHistory,
-          systemInstruction: {
-            parts: [{ text: systemInstruction }]
-          },
-          generationConfig: {
-            temperature: 0.8
-          }
-        };
-
-        const response = await executeApiCall(apiUrl, reqBody);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error ? data.error.message : "เรียก API ไม่สำเร็จ");
-        }
-
-        let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "DM นิ่งเงียบไป...";
-
-        const syncMatch = reply.match(/<<<STATUS_SYNC:\s*([\s\S]*?)>>>/);
-        if (syncMatch) {
-          try {
-            let jsonText = syncMatch[1].trim();
-            jsonText = jsonText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
-            const syncData = JSON.parse(jsonText);
-            
-            if (syncData.hp !== undefined) document.getElementById("currentHp").value = syncData.hp;
-            if (syncData.addItem) {
-              const cleanItem = syncData.addItem.replace(/^[•\-\*]\s*/, "");
-              const inv = document.getElementById("charInventory");
-              inv.value = (inv.value.trim() ? inv.value.trim() + "\n" : "") + `• ${cleanItem}`;
-            }
-            if (syncData.addParty) {
-              const cleanParty = syncData.addParty.replace(/^[•\-\*]\s*/, "");
-              const party = document.getElementById("charParty");
-              party.value = (party.value.trim() ? party.value.trim() + "\n" : "") + `• ${cleanParty}`;
-            }
-            saveSheet();
-            reply = reply.replace(/<<<STATUS_SYNC:\s*[\s\S]*?>>>/, "").trim();
-          } catch(e) { console.warn("JSON sync parser error", e); }
-        }
-
-        chatHistory.push({ role: "model", parts: [{ text: reply }] });
-        appendMessage("Dungeon Master", reply, "dm");
-
-      } catch (err) {
-        console.error(err);
-        appendMessage("System Alert", `เกิดข้อผิดพลาด: ${err.message}`, "system");
-      } finally {
-        sendBtn.disabled = false;
-        sendBtn.classList.remove("opacity-50");
-      }
-    }
-
-    function appendMessage(sender, text, type) {
-      const box = document.getElementById("narrativeBox");
-      const msgDiv = document.createElement("div");
-
-      if (type === "player") {
-        msgDiv.className = "bg-slate-800 self-end p-2.5 sm:p-3 rounded-l-lg rounded-tr-lg max-w-[85%] border border-slate-700 shadow text-xs";
-        msgDiv.innerHTML = `<p class="font-bold text-amber-400 text-[10px] mb-0.5 text-right">${sender}</p><div class="text-slate-100 whitespace-pre-wrap">${text}</div>`;
-      } else if (type === "dm") {
-        msgDiv.className = "bg-slate-900 border-l-4 border-amber-500 p-3 sm:p-4 rounded-r-lg max-w-[95%] shadow text-xs";
-        
-        let formattedText = text.replace(/\[ชอยส์\s*\d+\]:\s*([^\n]+)/g, (match, p1) => {
-          const cleanChoice = p1.replace(/"/g, '&quot;');
-          return `<button onclick="selectChoice('${cleanChoice}')" class="choice-btn text-left w-full my-1.5 p-2.5 bg-slate-950/80 border border-amber-500/40 rounded-lg text-amber-300 transition flex items-center justify-between shadow-sm"><span>👉 ${p1}</span><i class="fa-solid fa-dice-d20 text-amber-400 text-sm ml-2"></i></button>`;
-        });
-
-        msgDiv.innerHTML = `<p class="font-bold text-amber-300 text-[10px] mb-1.5 flex items-center gap-1"><i class="fa-solid fa-dungeon"></i> ${sender}</p><div class="text-slate-200 whitespace-pre-wrap leading-relaxed">${formattedText}</div>`;
-      } else {
-        msgDiv.className = "bg-slate-900/90 border border-indigo-500/40 p-2 rounded text-indigo-200 text-xs";
-        msgDiv.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> ${text}`;
-      }
-
-      box.appendChild(msgDiv);
-      box.scrollTop = box.scrollHeight;
-    }
-
-    loadSavedSheet();
-  </script>
+loadSavedSheet();
+loadStory();
+</script>
 </body>
 </html>
