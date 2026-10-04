@@ -93,6 +93,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
   <div class="flex bg-slate-950/80 p-1 rounded-lg border border-slate-800 flex-shrink-0 text-xs">
     <button onclick="switchSidebarSubTab('stats')" id="subTabStatsBtn" class="flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold"><i class="fa-solid fa-suitcase mr-1"></i> ของ & การทอย</button>
     <button onclick="switchSidebarSubTab('lore')" id="subTabLoreBtn" class="flex-1 py-1 rounded text-slate-400"><i class="fa-solid fa-book-atlas mr-1"></i> Lore & ตัวตน</button>
+    <button onclick="switchSidebarSubTab('journal')" id="subTabJournalBtn" class="flex-1 py-1 rounded text-slate-400"><i class="fa-solid fa-scroll mr-1"></i> บันทึก</button>
   </div>
 
   <div id="subTabStatsPane" class="flex-1 flex flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
@@ -130,6 +131,22 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-earth-americas mr-1"></i> ข้อมูลโลก & แคมเปญ</span>
       <textarea id="worldLore" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()">แคมเปญ: The Gilded Pride of Silvermist (ดินแดนหุบเขาซิลเวอร์มิสต์ ถูกปกคลุมด้วยสายหมอกเวทมนตร์ มีซากอารยธรรมจักรวรรดิเก่า มีพวกสลัดหมอกออกปล้นสะดม และมีอันตรายจากสัตว์อสูรสายหมอก)</textarea>
     </div>
+  </div>
+<div id="subTabJournalPane" class="flex-1 hidden flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800">
+      <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-flag mr-1"></i> เควสต์ <span class="text-[10px] text-slate-500 font-normal">(แตะเพื่อสลับเสร็จ/ยังไม่เสร็จ)</span></span>
+      <div id="jQuests" class="mt-1.5 flex flex-col gap-1"></div>
+    </div>
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800">
+      <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-user-group mr-1"></i> NPC ที่รู้จัก</span>
+      <div id="jNpcs" class="mt-1.5 flex flex-col gap-1"></div>
+    </div>
+    <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800">
+      <span class="text-xs text-amber-300 font-semibold"><i class="fa-solid fa-clock-rotate-left mr-1"></i> เหตุการณ์ที่ผ่านมา</span>
+      <p id="jSummary" class="text-[11px] text-slate-400 mt-1.5 italic empty:hidden"></p>
+      <div id="jEvents" class="mt-1.5 flex flex-col gap-1"></div>
+    </div>
+    <button onclick="clearJournal()" class="text-[11px] text-rose-400 hover:underline self-start">ล้างสมุดบันทึก</button>
   </div>
 </aside>
 
@@ -308,7 +325,8 @@ const SYSTEM_RULES = `คุณคือ Dungeon Master (DM) มืออาช�
 - ถ้า [สถานะ] ระบุว่าล้มลง (HP 0) ให้บรรยายว่าสลบและเสี่ยงตาย ห้ามให้ทำการกระทำอื่น ผล Death Save มาจากระบบ
 6. เมื่อตัวละครย้ายไปสถานที่ใหม่หรือฉากเปลี่ยนอย่างชัดเจน (ไม่ใช่ทุกข้อความ) ให้ใส่แท็กท้ายคำตอบ:
 <<<SCENE: {"place": "ชื่อสถานที่ภาษาไทยสั้นๆ", "type": "forest|cave|town|sea|ruins|castle|mountain|tavern|mist", "prompt": "คำบรรยายภาพสถานที่เป็นภาษาอังกฤษ 1-2 ประโยค เน้นบรรยากาศและแสง ไม่มีตัวละคร"}>>>
-7. ใส่แท็กสีหน้าของตัวละครผู้เล่นท้ายคำตอบเมื่ออารมณ์เปลี่ยนตามเหตุการณ์: <<<MOOD: "happy">>> เลือกจาก neutral, happy, smug, angry, sad, surprised, determined, worried, pained`;
+7. ใส่แท็กสีหน้าของตัวละครผู้เล่นท้ายคำตอบเมื่ออารมณ์เปลี่ยนตามเหตุการณ์: <<<MOOD: "happy">>> เลือกจาก neutral, happy, smug, angry, sad, surprised, determined, worried, pained
+8. จดบันทึกแคมเปญเมื่อเกิดเหตุการณ์สำคัญจริง (ไม่ต้องทุกข้อความ) ด้วยแท็กท้ายคำตอบ: <<<LOG: {"event": "สรุปเหตุการณ์ 1 ประโยค", "questAdd": "เควสต์ใหม่", "questDone": "เควสต์ที่สำเร็จ", "npc": {"name": "ชื่อ", "note": "สิ่งที่รู้ เช่น ท่าทีต่อผู้เล่น คำสัญญา"}}>>> ใส่เฉพาะ key ที่เกี่ยวข้อง ห้ามบันทึกซ้ำสิ่งที่มีใน [สมุดบันทึกแคมเปญ] และต้องเล่าให้สอดคล้องกับสมุดบันทึกเสมอ ทั้งคำสัญญา ศัตรูที่หนีไป และผลจากการเลือกก่อนหน้า`;
 
 function buildSystemInstruction() {
   const modeLine = ROLL_MODES[rollMode] || ROLL_MODES.balanced;
@@ -323,7 +341,7 @@ function buildSystemInstruction() {
 
 ${modeLine}
 ${sceneLine}${downed ? `
-[สถานะ: ล้มลง HP 0 | Death Save สำเร็จ ${ds.s}/3 ล้มเหลว ${ds.f}/3]` : ""}`;
+[สถานะ: ล้มลง HP 0 | Death Save สำเร็จ ${ds.s}/3 ล้มเหลว ${ds.f}/3]` : ""}${journalForPrompt()}`;
 }
 
 // ---------- Navigation ----------
@@ -348,15 +366,13 @@ window.addEventListener("resize", () => {
   }
 });
 window.switchSidebarSubTab = sub => {
-  const lore = sub === "lore";
-  $("subTabStatsPane").classList.toggle("hidden", lore);
-  $("subTabStatsPane").classList.toggle("flex", !lore);
-  $("subTabLorePane").classList.toggle("hidden", !lore);
-  $("subTabLorePane").classList.toggle("flex", lore);
-  const on = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold";
-  const off = "flex-1 py-1 rounded text-slate-400";
-  $("subTabLoreBtn").className = lore ? on : off;
-  $("subTabStatsBtn").className = lore ? off : on;
+  const on = "flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold", off = "flex-1 py-1 rounded text-slate-400";
+  [["stats", "subTabStatsPane", "subTabStatsBtn"], ["lore", "subTabLorePane", "subTabLoreBtn"], ["journal", "subTabJournalPane", "subTabJournalBtn"]].forEach(([k, pane, btn]) => {
+    const a = k === sub;
+    $(pane).classList.toggle("hidden", !a); $(pane).classList.toggle("flex", a);
+    $(btn).className = a ? on : off;
+  });
+  if (sub === "journal") renderJournal();
 };
 window.toggleDicePane = () => { $("dicePane").classList.toggle("hidden"); $("dicePane").classList.toggle("flex"); };
 window.toggleSettingsModal = () => {
@@ -577,6 +593,7 @@ window.clearAdventureData = () => {
   chatHistory = []; msgLog = []; currentScene = null; localStorage.removeItem("DND_SCENE_V1"); applyTheme("mist"); $("sceneLabel").textContent = ""; $("sceneImg").style.opacity = 0;
   downed = false; dead = false; ds = { s: 0, f: 0 }; saveState();
   if (!parseInt($("currentHp").value)) { $("currentHp").value = $("maxHp").value; saveSheet(); }
+  journal = { summary: "", events: [], quests: [], npcs: {} }; saveJournal(); renderJournal();
   applyMood("neutral"); updateVitals();
   $("narrativeBox").innerHTML = "";
   appendMessage("Dungeon Master", "ประวัติถูกรีเซ็ตแล้ว เริ่มการผจญภัยครั้งใหม่ได้เลย!", "dm");
@@ -664,6 +681,12 @@ async function sendDirectAction(text) {
       try { rollReq = JSON.parse(rm[1].trim().replace(/^```json\s*/i, "").replace(/```$/i, "").trim()); } catch (e) { console.warn("ROLL parse error", e); }
       reply = reply.replace(/<<<ROLL:\s*[\s\S]*?>>>/, "").trim();
     }
+    let logObj = null;
+    const lm = reply.match(/<<<LOG:\s*([\s\S]*?)>>>/);
+    if (lm) {
+      try { logObj = JSON.parse(lm[1].trim().replace(/^```json\s*/i, "").replace(/```$/i, "").trim()); } catch (e) { console.warn("LOG parse error", e); }
+      reply = reply.replace(/<<<LOG:\s*[\s\S]*?>>>/, "").trim();
+    }
     const mm = reply.match(/<<<MOOD:\s*"?([a-z]+)"?\s*>>>/i);
     if (mm) reply = reply.replace(/<<<MOOD:[\s\S]*?>>>/, "").trim();
     let sceneReq = null;
@@ -677,6 +700,7 @@ async function sendDirectAction(text) {
     if (rollReq && parseInt(rollReq.dc) && !downed) { setPending(parseInt(rollReq.dc), rollReq.skill || ""); openDiceUI(); }
     if (sceneReq) setScene(sceneReq, true);
     if (mm) applyMood(mm[1].toLowerCase());
+    if (logObj && typeof logObj === "object") applyLog(logObj);
   } catch (err) {
     console.error(err);
     chatHistory.pop(); // แก้ข้อ 4: ถอนข้อความ user ที่ยังไม่ได้คำตอบ
@@ -965,10 +989,89 @@ $("portraitFile").addEventListener("change", e => {
   rd.readAsDataURL(f);
 });
 
+// ---------- สมุดบันทึกแคมเปญ (ความจำระยะยาวของ DM) ----------
+let journal = { summary: "", events: [], quests: [], npcs: {} };
+function saveJournal() { try { localStorage.setItem("DND_JOURNAL_V1", JSON.stringify(journal)); } catch (e) {} }
+function loadJournal() {
+  try {
+    const o = JSON.parse(localStorage.getItem("DND_JOURNAL_V1") || "null");
+    if (o) journal = { summary: o.summary || "", events: o.events || [], quests: o.quests || [], npcs: o.npcs || {} };
+  } catch (e) {}
+}
+function journalForPrompt() {
+  const j = journal, act = j.quests.filter(q => !q.done).map(q => q.text), done = j.quests.filter(q => q.done).map(q => q.text);
+  const npcs = Object.entries(j.npcs).map(([n, t]) => `${n}: ${t}`);
+  if (!j.summary && !j.events.length && !act.length && !done.length && !npcs.length) return "";
+  return `\n[สมุดบันทึกแคมเปญ - ต้องสอดคล้องกับข้อมูลนี้เสมอ]\n` +
+    (j.summary ? `เรื่องย่อก่อนหน้า: ${j.summary}\n` : "") +
+    (j.events.length ? `เหตุการณ์ล่าสุด: ${j.events.slice(-12).join(" | ")}\n` : "") +
+    (act.length ? `เควสต์ที่ค้าง: ${act.join(" | ")}\n` : "") +
+    (done.length ? `เควสต์ที่จบแล้ว: ${done.slice(-5).join(" | ")}\n` : "") +
+    (npcs.length ? `NPC ที่รู้จัก: ${npcs.join(" | ")}\n` : "");
+}
+function applyLog(o) {
+  const clip = (v, n = 160) => String(v).trim().slice(0, n);
+  if (o.event) journal.events.push(clip(o.event));
+  [].concat(o.questAdd || []).forEach(t => {
+    const x = clip(t);
+    if (x && !journal.quests.some(q => q.text === x)) { journal.quests.push({ text: x, done: false }); appendMessage("System", `📜 เควสต์ใหม่: ${x}`, "system"); }
+  });
+  [].concat(o.questDone || []).forEach(t => {
+    const k = clip(t).toLowerCase(); if (!k) return;
+    const q = journal.quests.find(q => !q.done && (q.text.toLowerCase().includes(k) || k.includes(q.text.toLowerCase())));
+    if (q) { q.done = true; appendMessage("System", `✅ เควสต์สำเร็จ: ${q.text}`, "system"); }
+  });
+  if (o.npc && o.npc.name) journal.npcs[clip(o.npc.name, 40)] = clip(o.npc.note || "", 200);
+  saveJournal(); renderJournal();
+  if (journal.events.length > 24) compressJournal();
+}
+let compressing = false;
+async function compressJournal() {
+  if (compressing) return;
+  if (!apiKey) { if (journal.events.length > 60) { journal.events = journal.events.slice(-40); saveJournal(); } return; }
+  compressing = true;
+  const old = journal.events.slice(0, 12);
+  try {
+    const r = await executeApiCall(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(savedModel || DEFAULT_MODEL)}:generateContent`, {
+      contents: [{ role: "user", parts: [{ text: `รวมเรื่องย่อเดิมกับเหตุการณ์ใหม่ให้เป็นเรื่องย่อภาษาไทยเดียว ไม่เกิน 600 ตัวอักษร เก็บชื่อตัวละคร สถานที่ คำสัญญา และผลที่ตามมาสำคัญ\n\nเรื่องย่อเดิม: ${journal.summary || "(ไม่มี)"}\n\nเหตุการณ์ใหม่:\n${old.join("\n")}` }] }],
+      generationConfig: { temperature: 0.3 }
+    });
+    const d = await r.json();
+    const t = (d.candidates?.[0]?.content?.parts || []).filter(p => !p.thought && p.text).map(p => p.text).join("").trim();
+    if (r.ok && t) { journal.summary = t.slice(0, 900); journal.events = journal.events.slice(old.length); saveJournal(); renderJournal(); }
+  } catch (e) {
+    console.warn("compress failed", e);
+    if (journal.events.length > 60) { journal.events = journal.events.slice(-40); saveJournal(); }
+  }
+  compressing = false;
+}
+function renderJournal() {
+  const e = escapeHtml, j = journal, n = Object.entries(j.npcs);
+  const none = t => `<span class="text-[11px] text-slate-500">${t}</span>`;
+  $("jQuests").innerHTML = j.quests.length ? j.quests.map((q, i) => `<button data-q="${i}" class="text-left text-xs ${q.done ? "text-slate-500 line-through" : "text-slate-200"} hover:text-amber-300">${q.done ? "✅" : "⬜"} ${e(q.text)}</button>`).join("") : none("ยังไม่มีเควสต์");
+  $("jNpcs").innerHTML = n.length ? n.map(([k, v]) => `<div class="text-xs"><span class="text-amber-300">${e(k)}</span> <span class="text-slate-400">${e(v)}</span> <button data-npcdel="${e(k)}" class="text-slate-600 hover:text-rose-400">×</button></div>`).join("") : none("ยังไม่มี NPC ที่รู้จัก");
+  $("jSummary").textContent = j.summary;
+  $("jEvents").innerHTML = j.events.length ? j.events.slice(-20).reverse().map(t => `<div class="text-xs text-slate-300">• ${e(t)}</div>`).join("") : none("ยังไม่มีเหตุการณ์ที่จดไว้");
+}
+window.clearJournal = () => {
+  if (!confirm("ล้างสมุดบันทึกแคมเปญทั้งหมดหรือไม่?")) return;
+  journal = { summary: "", events: [], quests: [], npcs: {} }; saveJournal(); renderJournal();
+};
+document.addEventListener("click", e => {
+  const q = e.target.closest("[data-q]"), d = e.target.closest("[data-npcdel]");
+  if (q) { const it = journal.quests[+q.dataset.q]; if (it) { it.done = !it.done; saveJournal(); renderJournal(); } }
+  if (d) { delete journal.npcs[d.dataset.npcdel]; saveJournal(); renderJournal(); }
+});
+
 loadState();
 loadSavedSheet();
 loadStory();
 renderChips(); applyMood("neutral"); updateVitals();
+loadJournal(); renderJournal();
+if (msgLog.length && (journal.summary || journal.events.length || journal.quests.some(q => !q.done))) {
+  const act = journal.quests.filter(q => !q.done).map(q => q.text);
+  appendMessage("System", "📖 ตอนก่อนหน้า: " + [journal.summary, ...journal.events.slice(-3)].filter(Boolean).join(" · ") + (act.length ? " | เควสต์ค้าง: " + act.join(", ") : ""), "system", false);
+}
 try {
   const sc = JSON.parse(localStorage.getItem("DND_SCENE_V1") || "null");
   if (sc) setScene(sc, false); else applyTheme("mist");
