@@ -13,6 +13,10 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
 .editable{background:transparent;border-bottom:1px dashed #475569;outline:none}
 .editable:focus{border-bottom-color:#f59e0b;background:rgba(51,65,85,.4)}
 .choice-btn:hover{border-color:#f59e0b;background:rgba(245,158,11,.15)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes tumble{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+.shake{animation:shake .5s}.pop{animation:pop .45s}.tumble{animation:tumble .12s linear infinite}
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
@@ -71,6 +75,21 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     </div>
   </div>
 
+  <div class="bg-slate-800/60 rounded-xl p-2.5 border border-slate-800 flex gap-3 items-center flex-shrink-0">
+    <div class="relative w-20 h-24 rounded-lg overflow-hidden border border-amber-500/40 bg-slate-950 flex-shrink-0">
+      <img id="moodImg" class="w-full h-full object-cover hidden" alt="">
+      <div id="moodPh" class="w-full h-full flex items-center justify-center text-amber-300/50"><i class="fa-solid fa-user text-2xl"></i></div>
+    </div>
+    <div class="flex-1 min-w-0 text-xs">
+      <div class="flex justify-between items-center">
+        <span id="moodLabel" class="text-amber-300 font-semibold">ปกติ</span>
+        <button onclick="openPortraitModal()" class="text-slate-400 hover:text-amber-300"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>รูปหน้า</button>
+      </div>
+      <div class="h-2 bg-slate-950 rounded mt-1.5 overflow-hidden"><div id="hpBar" class="h-full bg-emerald-500 transition-all" style="width:100%"></div></div>
+      <div id="hpText" class="text-[10px] text-slate-400 mt-1"></div>
+      <div id="downText" class="text-[11px] text-rose-400 mt-0.5 empty:hidden"></div>
+    </div>
+  </div>
   <div class="flex bg-slate-950/80 p-1 rounded-lg border border-slate-800 flex-shrink-0 text-xs">
     <button onclick="switchSidebarSubTab('stats')" id="subTabStatsBtn" class="flex-1 py-1 rounded bg-amber-500/20 text-amber-300 font-semibold"><i class="fa-solid fa-suitcase mr-1"></i> ของ & การทอย</button>
     <button onclick="switchSidebarSubTab('lore')" id="subTabLoreBtn" class="flex-1 py-1 rounded text-slate-400"><i class="fa-solid fa-book-atlas mr-1"></i> Lore & ตัวตน</button>
@@ -80,7 +99,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     <div id="pcDiceCard" class="hidden md:flex flex-col bg-slate-800/50 rounded-xl p-2.5 border border-slate-800 gap-1.5">
       <div class="flex justify-between items-center text-xs">
         <span class="text-[10px] text-slate-400 font-semibold">🎲 Dice Tool (PC)</span>
-        <span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
+        <span id="dcBannerPC" class="text-[11px] text-amber-300"></span><span id="diceOutputPC" class="font-bold text-amber-400 text-xs"></span>
       </div>
       <div class="flex items-center gap-1.5">
         <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
@@ -93,7 +112,8 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     </div>
     <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[110px]">
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-briefcase mr-1"></i> กระเป๋าไอเทม</span>
-      <textarea id="charInventory" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
+      <textarea id="charInventory" oninput="renderChips()" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
+      <div id="itemChips" class="flex flex-wrap gap-1.5 mt-1.5"></div>
     </div>
     <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[90px]">
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-users mr-1"></i> สหายปาร์ตี้ (NPC)</span>
@@ -113,7 +133,19 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
   </div>
 </aside>
 
-<section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10">
+<section id="storyPane" class="flex-1 flex flex-col bg-slate-950 w-full h-full z-10 relative">
+  <div class="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
+    <div id="sceneBg" class="absolute inset-0" style="transition:background 1s"></div>
+    <img id="sceneImg" alt="" class="absolute inset-0 w-full h-full object-cover" style="opacity:0;transition:opacity 1s">
+    <div class="absolute inset-0 bg-slate-950/60"></div>
+  </div>
+  <div class="flex items-center justify-between gap-2 px-4 pt-2">
+    <div id="sceneLabel" class="text-[11px] text-amber-200/80"></div>
+    <div class="md:hidden flex items-center gap-2 flex-shrink-0">
+      <span id="hpMini" class="text-[11px] text-emerald-300"></span>
+      <img id="moodMini" class="w-9 h-11 rounded-md object-cover border border-amber-500/50 hidden" alt="">
+    </div>
+  </div>
   <div id="narrativeBox" class="flex-1 p-3.5 sm:p-5 overflow-y-auto chat-scroll flex flex-col gap-3.5 max-w-4xl mx-auto w-full">
     <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
       <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
@@ -152,9 +184,41 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="advCheckMobile" class="accent-amber-500"> Adv</label>
   </div>
   <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs">🎲 ทอยเต๋าเดี๋ยวนี้</button>
+  <div id="dcBannerMobile" class="text-center text-xs text-amber-300 min-h-[14px]"></div>
   <div id="diceOutputMobile" class="text-center font-bold text-amber-400 text-xs min-h-[16px]"></div>
 </div>
 </main>
+
+<input type="file" id="portraitFile" accept="image/*" class="hidden">
+<div id="portraitModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-4 flex flex-col gap-3 shadow-2xl text-xs max-h-[90dvh] overflow-y-auto">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+      <h3 class="font-bold text-amber-400"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> รูปหน้าและสีหน้าตัวละคร</h3>
+      <button onclick="closePortraitModal()" class="text-slate-400 text-lg px-1">&times;</button>
+    </div>
+    <div>
+      <label class="block text-slate-400 mb-1">รูปลักษณ์ตัวละคร (ใช้สร้างภาพร่วมกับชื่อ คลาส และบุคลิกใน Lore):</label>
+      <textarea id="charLook" rows="3" onchange="saveSheet()" placeholder="เช่น หญิงสาวผมยาวสีทอง ตาสีฟ้า สวมเกราะขาวทอง..." class="w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none focus:border-amber-500 resize-none"></textarea>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="generatePortraitSlot('neutral')" class="flex-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-1.5 rounded">สร้างภาพหลักจาก Lore</button>
+      <button onclick="generateAllPortraits()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 py-1.5 rounded">สร้างสีหน้าที่เหลือ</button>
+    </div>
+    <p class="text-[10px] text-slate-500">ใช้โมเดลภาพที่ตั้งไว้ อาจมีค่าใช้จ่ายตามบัญชี Google ของคุณ สีหน้าอื่นจะอิงภาพหลักเพื่อให้หน้าตาใกล้เคียงกัน แต่ไม่รับประกันว่าจะเหมือนทุกภาพ หรืออัปโหลดภาพเองเป็นช่องๆ ก็ได้ อย่าใช้ภาพถ่ายของคนอื่น</p>
+    <div id="portraitStatus" class="text-amber-300 min-h-[16px]"></div>
+    <div id="moodGrid" class="grid grid-cols-3 gap-2"></div>
+  </div>
+</div>
+
+<div id="rollOverlay" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-[60] p-4">
+  <div id="rollBox" class="text-center w-full max-w-xs">
+    <div id="rollTarget" class="text-sm text-slate-300 mb-3 min-h-[20px]"></div>
+    <div id="rollNum" class="text-8xl font-black text-amber-400">?</div>
+    <div id="rollDetail" class="text-xs text-slate-400 mt-2 min-h-[16px]"></div>
+    <div id="rollVerdict" class="text-2xl font-bold mt-4 min-h-[32px]"></div>
+    <button id="rollContinue" onclick="finishRoll()" class="hidden mt-6 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-8 py-2.5 rounded-lg text-sm"></button>
+  </div>
+</div>
 
 <nav class="md:hidden bg-slate-900 border-t border-slate-800 flex justify-around py-2 z-30 flex-shrink-0">
   <button onclick="switchMobileTab('story')" id="tabStoryBtn" class="flex flex-col items-center text-amber-400 text-xs gap-0.5"><i class="fa-solid fa-book-open text-base"></i><span>เนื้อเรื่อง</span></button>
@@ -163,7 +227,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
 </nav>
 
 <div id="settingsModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50">
-  <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 shadow-2xl text-xs">
+  <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 shadow-2xl text-xs max-h-[90dvh] overflow-y-auto">
     <div class="flex justify-between items-center border-b border-slate-800 pb-2">
       <h3 class="font-bold text-amber-400"><i class="fa-solid fa-gear mr-1"></i> ตั้งค่า API & ระบบเกม</h3>
       <button onclick="toggleSettingsModal()" class="text-slate-400 text-lg px-1">&times;</button>
@@ -178,6 +242,19 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
       <datalist id="modelList">
         <option value="gemini-3.5-flash-lite"><option value="gemini-3.8-flash"><option value="gemini-3.1-pro-preview">
       </datalist>
+    </div>
+    <div>
+      <label class="block text-slate-400 mb-1">ระดับการบังคับทอยเต๋า:</label>
+      <select id="rollModeSelector" class="w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none">
+        <option value="strict">เข้มงวด: เสี่ยงนิดเดียวก็ต้องทอย</option>
+        <option value="balanced">สมดุล: ทอยเมื่อผลไม่แน่นอนและสำคัญ</option>
+        <option value="relaxed">ผ่อนคลาย: ทอยเฉพาะต่อสู้/ช่วงตึงเครียด</option>
+      </select>
+    </div>
+    <div class="border-t border-slate-800 pt-2">
+      <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="imgGenToggle" class="accent-amber-500"> สร้างภาพฉากแนวอนิเมะด้วย AI</label>
+      <p class="text-[10px] text-slate-500 mt-1">อาจมีค่าใช้จ่ายหรือใช้โควตาของบัญชี Google คุณ ปิดไว้จะใช้ธีมสีตามฉากแทน หากสร้างภาพไม่สำเร็จก็ถอยกลับไปใช้ธีมสีเอง</p>
+      <input id="imgModelInput" placeholder="โมเดลสร้างภาพ" class="mt-1.5 w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none focus:border-amber-500">
     </div>
     <div class="flex justify-between items-center pt-2 border-t border-slate-800">
       <button onclick="clearAdventureData()" class="text-rose-400 hover:underline">รีเซ็ตเนื้อเรื่อง</button>
@@ -194,6 +271,18 @@ const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 let apiKey = localStorage.getItem("SOLO_DND_KEY") || "";
 let savedModel = localStorage.getItem("SOLO_DND_MODEL") || DEFAULT_MODEL;
 let chatHistory = [];
+let rollMode = localStorage.getItem("SOLO_DND_ROLLMODE") || "balanced";
+let lastRollTag = "";
+let currentScene = null;
+let downed = false, dead = false, ds = { s: 0, f: 0 };
+let imgGen = localStorage.getItem("SOLO_DND_IMG") === "1";
+const DEFAULT_IMG_MODEL = "gemini-3.1-flash-image-preview";
+let imgModel = localStorage.getItem("SOLO_DND_IMGMODEL") || DEFAULT_IMG_MODEL;
+const ROLL_MODES = {
+  strict: "[ระดับการทอย: เข้มงวด] ถ้าการกระทำมีความเสี่ยงหรือผลไม่แน่นอนแม้เล็กน้อย ให้สั่งทอย",
+  balanced: "[ระดับการทอย: สมดุล] สั่งทอยเมื่อผลไม่แน่นอนและมีผลต่อเรื่องจริง",
+  relaxed: "[ระดับการทอย: ผ่อนคลาย] สั่งทอยเฉพาะการต่อสู้ ภาวะเสี่ยงอันตราย หรือจังหวะตึงเครียดจริงๆ ที่เหลือให้ผ่านและเล่าเรื่องต่อ"
+};
 
 // แก้ข้อ 3: escape HTML ก่อนแสดงผลทุกครั้ง
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
@@ -201,23 +290,40 @@ const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
 
 const SYSTEM_RULES = `คุณคือ Dungeon Master (DM) มืออาชีพสำหรับ DnD 5e Solo Tabletop RPG
 1. คุมเนื้อเรื่องให้อยู่ในกรอบ [Lore] เสมอ และให้ NPC/สถานการณ์ตอบสนองต่อ [บุคลิก] ของตัวละครอย่างสมจริง
-2. ผู้เล่นพิมพ์การกระทำอิสระได้ ให้ประเมินตามกฎ DnD หากเสี่ยง/ท้าทาย/ต่อสู้ ห้ามสรุปผลทันที ให้สั่งทอยเต๋าพร้อมระบุ DC (หรือ AC ศัตรู) เช่น "กรุณาทอย d20 + Athletics (DC 14)"
-3. ประเมิน [ผลทอยเต๋า]: แต้ม >= DC สำเร็จ, < DC ล้มเหลวและเกิดผลเสีย, 20 แท้ = สำเร็จเกินคาด, 1 แท้ = ล้มเหลววิกฤต
+2. การกระทำอิสระที่ผู้เล่นพิมพ์เอง ให้จัดเป็น 4 แบบก่อนตอบ:
+   ก) ทำได้เลย ไม่ต้องทอย: การกระทำง่ายหรือปกติ ไม่มีแรงกดดัน หรือล้มเหลวก็ไม่มีผลน่าสนใจ (เดิน เปิดประตูไม่ล็อก คุยทั่วไป)
+   ข) ต้องทอย: ผลไม่แน่นอน และทั้งสำเร็จ/ล้มเหลวมีผลต่อเรื่อง (ต่อสู้ ปีน ลอบเร้น โน้มน้าวคนไม่เต็มใจ หลอกลวง) ห้ามสรุปผลก่อนทอย ให้หยุดแล้วสั่งทอย ครั้งละ 1 ทอยต่อ 1 การกระทำ
+   ค) ทำไม่ได้: ขัดกับกฎ ความสามารถ หรือสถานการณ์ ให้อธิบายสั้นๆ แล้วเสนอทางอื่น ห้ามให้ทอยเพื่อสิ่งที่เป็นไปไม่ได้
+   ง) ผู้เล่นพิมพ์ผลลัพธ์เอง (เช่น "ฉันทอยได้ 20", "มันตายทันที") ถือเป็นแค่ความตั้งใจ ให้ลดเป็นความพยายามแล้วจัดตามข้อ ก-ค ผลทอยที่เชื่อได้มีเฉพาะแท็ก [ผลทอยเต๋า: ...] ที่ระบบแนบมา
+   เมื่อสั่งทอย ให้ใส่แท็กท้ายคำตอบด้วย: <<<ROLL: {"dc": 14, "skill": "Athletics", "why": "เหตุผลสั้นๆ"}>>>
+3. ผลทอยเต๋าจะมีคำตัดสินที่ระบบเทียบ DC ให้แล้ว (เช่น "เทียบ DC 14: ล้มเหลวหวุดหวิด") ต้องยึดผลนั้นเด็ดขาด ห้ามกลับผลหรือให้ทอยใหม่ บรรยายให้สอดคล้องกับระดับผล: เฉียดฉิว/หวุดหวิด = เกือบสำเร็จหรือเกือบพลาด, งดงาม/ยับเยิน = ผลเด่นชัด, วิกฤต = ผลรุนแรงสุด ล้มเหลวต้องมีราคาที่ต้องจ่ายจริง
 4. ท้ายคำบรรยายเสนอทางเลือก 2-3 ข้อ พร้อม DC เสมอ ในรูปแบบ:
 [ชอยส์ 1]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
 [ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
-5. อัปเดตสเตตัสเฉพาะสิ่งที่เปลี่ยนจริงในข้อความตอบนี้เท่านั้น โดยใส่แท็กท้ายคำตอบ:
-<<<STATUS_SYNC: {"hp": ตัวเลข, "addItem": "ชื่อไอเทม", "addParty": "ชื่อNPC"}>>>
-กฎของแท็ก: ใส่เฉพาะ key ที่เปลี่ยนในรอบนี้ ห้ามใส่ key ที่ไม่เปลี่ยน, ห้ามเพิ่มไอเทมหรือสหายที่มีอยู่แล้วในรายการ [ตัวละคร], ผู้เล่นได้ของหรือสหายใหม่ก็ต่อเมื่อเรื่องราวเพิ่งมอบให้ในรอบนี้จริง และถ้าไม่มีอะไรเปลี่ยนให้ไม่ต้องใส่แท็กเลย`;
+5. อัปเดตสเตตัสเฉพาะสิ่งที่เปลี่ยนจริงในข้อความนี้ ด้วยแท็กท้ายคำตอบ:
+<<<STATUS_SYNC: {"hpDelta": -4, "addItem": "ชื่อ", "removeItem": "ชื่อ", "addParty": "ชื่อ", "removeParty": "ชื่อ"}>>>
+- hpDelta คือจำนวนที่ HP เปลี่ยน (ลบ=เสียเลือด บวก=ฟื้น) ห้ามใส่ HP สัมบูรณ์ ให้สมเหตุสมผลกับความรุนแรง (ศัตรูทั่วไป 1d6-2d6, อันตรายหนัก 2d8 ขึ้นไป)
+- ใส่เฉพาะ key ที่เปลี่ยนในรอบนี้ ห้ามเพิ่มของหรือสหายที่มีอยู่แล้ว ถ้าไม่มีอะไรเปลี่ยนไม่ต้องใส่แท็ก
+- ไอเทมที่ใช้หมด ถูกทำลาย หรือมอบให้ผู้อื่น ต้องใส่ removeItem ด้วยชื่อตามรายการ
+- ถ้า [สถานะ] ระบุว่าล้มลง (HP 0) ให้บรรยายว่าสลบและเสี่ยงตาย ห้ามให้ทำการกระทำอื่น ผล Death Save มาจากระบบ
+6. เมื่อตัวละครย้ายไปสถานที่ใหม่หรือฉากเปลี่ยนอย่างชัดเจน (ไม่ใช่ทุกข้อความ) ให้ใส่แท็กท้ายคำตอบ:
+<<<SCENE: {"place": "ชื่อสถานที่ภาษาไทยสั้นๆ", "type": "forest|cave|town|sea|ruins|castle|mountain|tavern|mist", "prompt": "คำบรรยายภาพสถานที่เป็นภาษาอังกฤษ 1-2 ประโยค เน้นบรรยากาศและแสง ไม่มีตัวละคร"}>>>
+7. ใส่แท็กสีหน้าของตัวละครผู้เล่นท้ายคำตอบเมื่ออารมณ์เปลี่ยนตามเหตุการณ์: <<<MOOD: "happy">>> เลือกจาก neutral, happy, smug, angry, sad, surprised, determined, worried, pained`;
 
 function buildSystemInstruction() {
+  const modeLine = ROLL_MODES[rollMode] || ROLL_MODES.balanced;
+  const sceneLine = currentScene ? `[ฉากปัจจุบัน: ${currentScene.place}]` : "[ยังไม่มีฉากปัจจุบัน: ให้ใส่แท็ก SCENE ในคำตอบนี้]";
   // ย้าย snapshot มาไว้ที่ systemInstruction ส่งครั้งเดียวต่อคำขอ ไม่ซ้ำใน history
   const v = id => $(id).value.replace(/\n/g, ', ');
   return `${SYSTEM_RULES}
 
 [ตัวละคร: ${v("charName")} | คลาส: ${v("charClass")} | HP: ${v("currentHp")}/${v("maxHp")} | AC: ${v("charAc")} | ไอเทม: ${v("charInventory")} | ปาร์ตี้: ${v("charParty")}]
 [บุคลิก]: ${v("charPersonality")}
-[Lore]: ${v("worldLore")}`;
+[Lore]: ${v("worldLore")}
+
+${modeLine}
+${sceneLine}${downed ? `
+[สถานะ: ล้มลง HP 0 | Death Save สำเร็จ ${ds.s}/3 ล้มเหลว ${ds.f}/3]` : ""}`;
 }
 
 // ---------- Navigation ----------
@@ -256,6 +362,8 @@ window.toggleDicePane = () => { $("dicePane").classList.toggle("hidden"); $("dic
 window.toggleSettingsModal = () => {
   $("apiKeyInputModal").value = apiKey;
   $("modelSelector").value = savedModel;
+  $("rollModeSelector").value = rollMode;
+  $("imgGenToggle").checked = imgGen; $("imgModelInput").value = imgModel;
   $("settingsModal").classList.toggle("hidden");
   $("settingsModal").classList.toggle("flex");
 };
@@ -264,6 +372,10 @@ window.saveApiKeyModal = () => {
   const m = $("modelSelector").value.trim() || DEFAULT_MODEL;
   if (k) { localStorage.setItem("SOLO_DND_KEY", k); apiKey = k; }
   localStorage.setItem("SOLO_DND_MODEL", m); savedModel = m;
+  rollMode = $("rollModeSelector").value; localStorage.setItem("SOLO_DND_ROLLMODE", rollMode);
+  imgGen = $("imgGenToggle").checked; localStorage.setItem("SOLO_DND_IMG", imgGen ? "1" : "0");
+  imgModel = $("imgModelInput").value.trim() || DEFAULT_IMG_MODEL; localStorage.setItem("SOLO_DND_IMGMODEL", imgModel);
+  if (currentScene) setScene(currentScene, true);
   alert("บันทึกการตั้งค่าเรียบร้อยแล้ว!");
   toggleSettingsModal();
 };
@@ -298,6 +410,7 @@ window.takeShortRest = () => {
   const heal = Math.floor(Math.random() * 8) + 3;
   const next = Math.min(max, cur + heal);
   $("currentHp").value = next; saveSheet();
+  if (next > 0 && downed) { downed = false; ds = { s: 0, f: 0 }; saveState(); updateVitals(); }
   appendMessage("System", `Short Rest: HP +${heal} (${next}/${max})`, "system");
   switchMobileTab("story");
   sendDirectAction(`ฉันหาที่กำบังและพักฟื้นระยะสั้น (HP เป็น ${next}/${max})`);
@@ -305,6 +418,7 @@ window.takeShortRest = () => {
 window.takeLongRest = () => {
   const max = parseInt($("maxHp").value) || 12;
   $("currentHp").value = max; $("charPride").value = PRIDE_MAX; saveSheet();
+  downed = false; dead = false; ds = { s: 0, f: 0 }; saveState(); updateVitals();
   appendMessage("System", `Long Rest: HP เต็ม (${max}/${max}) และฟื้นฟู Pride`, "system");
   switchMobileTab("story");
   sendDirectAction("ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)");
@@ -328,42 +442,102 @@ function openDiceUI() {
   }
 }
 
-// ---------- Dice (แก้ข้อ 1: ตรวจ Crit จากลูกที่เลือกจริง) ----------
+// ---------- Dice: ทอยแบบลุ้น มีแอนิเมชันและคำตัดสินเทียบ DC ----------
+let pendingRoll = null, rollLock = false, lastRoll = null;
+function updateBanner() {
+  const t = pendingRoll ? `🎯 DC ${pendingRoll.dc}${pendingRoll.label ? " (" + pendingRoll.label + ")" : ""}` : "";
+  $("dcBannerPC").textContent = t; $("dcBannerMobile").textContent = t;
+}
+function setPending(dc, label) { pendingRoll = { dc, label }; updateBanner(); }
+function judge(nat, total, dc) {
+  if (nat === 20) return { text: "สำเร็จวิกฤต", icon: "💥", color: "text-yellow-300" };
+  if (nat === 1) return { text: "ล้มเหลววิกฤต", icon: "💀", color: "text-rose-500" };
+  if (total >= dc) {
+    const m = total - dc;
+    if (m >= 5) return { text: "สำเร็จอย่างงดงาม", icon: "✅", color: "text-emerald-400" };
+    if (m === 0) return { text: "สำเร็จแบบเฉียดฉิว", icon: "😅", color: "text-lime-300" };
+    return { text: "สำเร็จ", icon: "✅", color: "text-emerald-400" };
+  }
+  const d = dc - total;
+  if (d <= 2) return { text: "ล้มเหลวหวุดหวิด", icon: "😬", color: "text-orange-400" };
+  if (d >= 8) return { text: "ล้มเหลวยับเยิน", icon: "❌", color: "text-rose-500" };
+  return { text: "ล้มเหลว", icon: "❌", color: "text-rose-400" };
+}
+function tumble(sides, final, done) {
+  const el = $("rollNum"); let delay = 45;
+  el.classList.add("tumble");
+  const tick = () => {
+    if (delay > 380) { el.classList.remove("tumble"); el.textContent = final; done(); return; }
+    el.textContent = Math.floor(Math.random() * sides) + 1;
+    delay *= 1.17; setTimeout(tick, delay);
+  };
+  tick();
+}
 window.executeRoll = device => {
+  if (rollLock) return;
   const s = device === "PC" ? "PC" : "Mobile";
   const sides = parseInt($(`diceType${s}`).value);
-  const mod = parseInt($(`diceMod${s}`).value) || 0;
+  const isDS = pendingRoll && pendingRoll.label === "Death Save" && sides === 20;
+  const mod = isDS ? 0 : (parseInt($(`diceMod${s}`).value) || 0);
   const adv = $(`advCheck${s}`).checked;
   const roll = () => Math.floor(Math.random() * sides) + 1;
-
   const r1 = roll();
   let chosen = r1, desc = `d${sides}(${r1})`;
-  if (adv && sides === 20) {
-    const r2 = roll();
-    chosen = Math.max(r1, r2);
-    desc = `Adv [${r1}, ${r2}] -> ${chosen}`;
-  }
-  if (adv) { $("advCheckPC").checked = false; $("advCheckMobile").checked = false; } // รีเซ็ต Adv เสมอ
+  if (adv && sides === 20) { const r2 = roll(); chosen = Math.max(r1, r2); desc = `Adv [${r1}, ${r2}] -> ${chosen}`; }
+  if (adv) { $("advCheckPC").checked = false; $("advCheckMobile").checked = false; }
   const total = chosen + mod;
+  const dc = pendingRoll && sides === 20 ? pendingRoll.dc : null;
+  lastRoll = { s, sides, mod, desc, chosen, total, dc, verdict: dc !== null ? judge(chosen, total, dc) : null, label: pendingRoll ? pendingRoll.label : "" };
 
+  rollLock = true;
+  $("dicePane").classList.add("hidden"); $("dicePane").classList.remove("flex");
+  $("rollTarget").textContent = dc !== null ? `เป้าหมาย DC ${dc}${pendingRoll.label ? " · " + pendingRoll.label : ""}` : `ทอย d${sides} ${mod >= 0 ? "+" : ""}${mod}`;
+  $("rollNum").className = "text-8xl font-black text-amber-400";
+  $("rollDetail").textContent = ""; $("rollVerdict").textContent = "";
+  $("rollVerdict").className = "text-2xl font-bold mt-4 min-h-[32px]";
+  $("rollBox").classList.remove("shake");
+  $("rollContinue").classList.add("hidden");
+  $("rollOverlay").classList.remove("hidden"); $("rollOverlay").classList.add("flex");
+
+  tumble(sides, chosen, () => {
+    const r = lastRoll, v = r.verdict;
+    $("rollNum").className = `text-8xl font-black pop ${v ? v.color : "text-amber-400"}`;
+    $("rollDetail").textContent = `${r.desc} ${r.mod >= 0 ? "+" : ""}${r.mod} = ${r.total}`;
+    if (v) { $("rollVerdict").textContent = `${v.icon} ${v.text}`; $("rollVerdict").classList.add(v.color); }
+    else if (r.sides === 20 && (r.chosen === 20 || r.chosen === 1)) $("rollVerdict").textContent = r.chosen === 20 ? "🔥 NAT 20!" : "💀 NAT 1!";
+    if (v) applyMood(moodFromVerdict(v.text));
+    if (r.chosen === 1 || (v && r.total < r.dc)) $("rollBox").classList.add("shake");
+    if (navigator.vibrate) navigator.vibrate(r.chosen === 20 || r.chosen === 1 ? [80, 40, 80] : 60);
+    $("rollContinue").textContent = v ? "ดำเนินเรื่อง ▶" : "ตกลง";
+    $("rollContinue").classList.remove("hidden");
+  });
+};
+window.finishRoll = () => {
+  const r = lastRoll; if (!r) return;
+  rollLock = false;
+  $("rollOverlay").classList.add("hidden"); $("rollOverlay").classList.remove("flex");
+  if (r.label === "Death Save" && downed) handleDeathSave(r);
   let crit = "";
-  if (sides === 20) {
-    if (chosen === 20) crit = " 🔥 CRITICAL SUCCESS (20 ธรรมชาติ)!";
-    else if (chosen === 1) crit = " 💀 CRITICAL FAIL (1 ธรรมชาติ)!";
-  }
-  const res = `${desc} ${mod >= 0 ? "+" : ""}${mod} = ${total}${crit}`;
-  $(`diceOutput${s}`).innerText = res;
-
+  if (r.sides === 20) crit = r.chosen === 20 ? " 🔥 NAT 20!" : r.chosen === 1 ? " 💀 NAT 1!" : "";
+  const res = `${r.desc} ${r.mod >= 0 ? "+" : ""}${r.mod} = ${r.total}${crit}`;
+  $(`diceOutput${r.s}`).innerText = res;
   const input = $("playerInput");
   const action = input.value.replace(/\[ผลทอยเต๋า:.*?\]\s*/g, "").trim();
-  input.value = `[ผลทอยเต๋า: ${res}] ${action}`;
-  if (device === "Mobile") { switchMobileTab("story"); toggleDicePane(); } else input.focus();
+  lastRollTag = `[ผลทอยเต๋า: ${res}${r.verdict ? ` | เทียบ DC ${r.dc}: ${r.verdict.text}` : ""}]`;
+  input.value = `${lastRollTag} ${action}`;
+  if (window.innerWidth < 768) switchMobileTab("story");
+  if (r.verdict) { pendingRoll = null; updateBanner(); sendAction(); if (downed && !dead) setPending(10, "Death Save"); } else input.focus();
 };
 
 // ---------- Choices ----------
 window.selectChoice = text => {
   $("playerInput").value = `ฉันเลือก: ${text}`;
-  if (/DC|d20|ทอย/.test(text)) openDiceUI(); else sendAction();
+  const m = text.match(/DC\s*(\d+)/i);
+  if (m) {
+    const sk = text.match(/\+\s*([A-Za-z ]+?)\s*DC/);
+    setPending(parseInt(m[1]), sk ? sk[1].trim() : "");
+    openDiceUI();
+  } else if (/d20|ทอย/.test(text)) openDiceUI(); else sendAction();
 };
 // แก้ข้อ 2: event delegation + data-choice แทน inline onclick
 $("narrativeBox").addEventListener("click", e => {
@@ -371,12 +545,13 @@ $("narrativeBox").addEventListener("click", e => {
   if (b) selectChoice(b.dataset.choice);
 });
 
-window.triggerQuickAction = t => sendDirectAction(t);
+window.triggerQuickAction = t => { if (canAct()) sendDirectAction(t); };
 
 // ---------- Save / Load ----------
-const FIELDS = {name:"charName", class:"charClass", personality:"charPersonality", lore:"worldLore", hp:"currentHp", maxHp:"maxHp", ac:"charAc", speed:"charSpeed", pride:"charPride", inventory:"charInventory", party:"charParty"};
+const FIELDS = {name:"charName", class:"charClass", personality:"charPersonality", lore:"worldLore", hp:"currentHp", maxHp:"maxHp", ac:"charAc", speed:"charSpeed", pride:"charPride", inventory:"charInventory", party:"charParty", look:"charLook"};
 window.saveSheet = () => {
   const d = {}; for (const k in FIELDS) d[k] = $(FIELDS[k]).value;
+  updateVitals();
   try { localStorage.setItem("DND_SHEET_DATA_V2", JSON.stringify(d)); } catch (e) { console.warn(e); }
 };
 function loadSavedSheet() {
@@ -399,7 +574,10 @@ function loadSavedSheet() {
 }
 window.clearAdventureData = () => {
   if (!confirm("ต้องการรีเซ็ตประวัติการเล่นทั้งหมดหรือไม่?")) return;
-  chatHistory = []; msgLog = [];
+  chatHistory = []; msgLog = []; currentScene = null; localStorage.removeItem("DND_SCENE_V1"); applyTheme("mist"); $("sceneLabel").textContent = ""; $("sceneImg").style.opacity = 0;
+  downed = false; dead = false; ds = { s: 0, f: 0 }; saveState();
+  if (!parseInt($("currentHp").value)) { $("currentHp").value = $("maxHp").value; saveSheet(); }
+  applyMood("neutral"); updateVitals();
   $("narrativeBox").innerHTML = "";
   appendMessage("Dungeon Master", "ประวัติถูกรีเซ็ตแล้ว เริ่มการผจญภัยครั้งใหม่ได้เลย!", "dm");
   toggleSettingsModal();
@@ -407,7 +585,17 @@ window.clearAdventureData = () => {
 
 window.sendAction = () => {
   const input = $("playerInput");
-  const t = input.value.trim(); if (!t) return;
+  // ลบแท็กผลทอยที่ผู้เล่นพิมพ์เอง เหลือเฉพาะแท็กที่ระบบสร้าง
+  let t = input.value.trim().replace(/\[ผลทอยเต๋า:[^\]]*\]/g, m => m === lastRollTag ? m : "").trim();
+  if (!t) { input.value = ""; return; }
+  const hasRoll = lastRollTag && t.includes(lastRollTag);
+  if (dead && !hasRoll) { alert("ตัวละครเสียชีวิตแล้ว รีเซ็ตเนื้อเรื่องในหน้าตั้งค่าเพื่อเริ่มใหม่"); return; }
+  if (downed && !hasRoll) { alert("ตัวละครล้มลงที่ HP 0 ต้องทอย Death Save (d20) ก่อน"); if (!pendingRoll) setPending(10, "Death Save"); openDiceUI(); return; }
+  if (pendingRoll && !hasRoll) {
+    if (rollMode === "strict" && !confirm(`DM กำลังรอผลทอย DC ${pendingRoll.dc}\nถ้าส่งตอนนี้จะถือเป็นการเปลี่ยนการกระทำและยกเลิกการทอย ต้องการต่อไหม?`)) return;
+    pendingRoll = null; updateBanner();
+  }
+  lastRollTag = "";
   input.value = ""; sendDirectAction(t);
 };
 
@@ -458,15 +646,37 @@ async function sendDirectAction(text) {
           el.value = (el.value.trim() ? el.value.trim() + "\n" : "") + "• " + name;
           appendMessage("System", `${label}: ${name}`, "system");
         };
-        if (sync.hp !== undefined && !isNaN(parseInt(sync.hp))) $("currentHp").value = sync.hp;
+        const dh = parseInt(sync.hpDelta);
+        if (!isNaN(dh) && dh !== 0) applyHp(dh);
+        else if (isNaN(dh) && sync.hp !== undefined && !isNaN(parseInt(sync.hp))) applyHp(parseInt(sync.hp) - (parseInt($("currentHp").value) || 0));
         if (sync.addItem) [].concat(sync.addItem).forEach(x => append("charInventory", x, "ได้รับไอเทม"));
         if (sync.addParty) [].concat(sync.addParty).forEach(x => append("charParty", x, "สหายใหม่"));
+        [].concat(sync.removeItem || []).forEach(x => removeFrom("charInventory", x, "ใช้/เสียไอเทม"));
+        [].concat(sync.removeParty || []).forEach(x => removeFrom("charParty", x, "สหายจากไป"));
+        renderChips();
         saveSheet();
       } catch (e) { console.warn("sync parse error", e); }
       reply = reply.replace(/<<<STATUS_SYNC:\s*[\s\S]*?>>>/, "").trim();
     }
+    let rollReq = null;
+    const rm = reply.match(/<<<ROLL:\s*([\s\S]*?)>>>/);
+    if (rm) {
+      try { rollReq = JSON.parse(rm[1].trim().replace(/^```json\s*/i, "").replace(/```$/i, "").trim()); } catch (e) { console.warn("ROLL parse error", e); }
+      reply = reply.replace(/<<<ROLL:\s*[\s\S]*?>>>/, "").trim();
+    }
+    const mm = reply.match(/<<<MOOD:\s*"?([a-z]+)"?\s*>>>/i);
+    if (mm) reply = reply.replace(/<<<MOOD:[\s\S]*?>>>/, "").trim();
+    let sceneReq = null;
+    const scm = reply.match(/<<<SCENE:\s*([\s\S]*?)>>>/);
+    if (scm) {
+      try { sceneReq = JSON.parse(scm[1].trim().replace(/^```json\s*/i, "").replace(/```$/i, "").trim()); } catch (e) { console.warn("SCENE parse error", e); }
+      reply = reply.replace(/<<<SCENE:\s*[\s\S]*?>>>/, "").trim();
+    }
     chatHistory.push({ role: "model", parts: [{ text: reply }] });
     appendMessage("Dungeon Master", reply, "dm");
+    if (rollReq && parseInt(rollReq.dc) && !downed) { setPending(parseInt(rollReq.dc), rollReq.skill || ""); openDiceUI(); }
+    if (sceneReq) setScene(sceneReq, true);
+    if (mm) applyMood(mm[1].toLowerCase());
   } catch (err) {
     console.error(err);
     chatHistory.pop(); // แก้ข้อ 4: ถอนข้อความ user ที่ยังไม่ได้คำตอบ
@@ -489,6 +699,11 @@ function appendMessage(sender, text, type, persist = true) {
     div.innerHTML = `<p class="font-bold text-amber-400 text-[10px] mb-0.5 text-right">${safeSender}</p><div class="text-slate-100 whitespace-pre-wrap">${safe}</div>`;
   } else if (type === "dm") {
     div.className = "bg-slate-900 border-l-4 border-amber-500 p-3 sm:p-4 rounded-r-lg max-w-[95%] shadow text-xs";
+    if (persist && !downed) { // DM สั่งทอยโดยตรง (ไม่มีชอยส์) -> ตั้ง DC อัตโนมัติ
+      const dcm = text.match(/DC\s*(\d+)/i);
+      if (/\[ชอยส์\s*\d+\]/.test(text)) { pendingRoll = null; updateBanner(); }
+      else if (dcm && /ทอย/.test(text)) { setPending(parseInt(dcm[1]), ""); openDiceUI(); }
+    }
     const html = safe
       .replace(/\[ชอยส์\s*\d+\]:\s*([^\n]+)/g, (_, c) => {
         const label = c.replace(/\*\*/g, "");
@@ -527,8 +742,237 @@ function loadStory() {
   } catch (e) { console.warn("Story load failed", e); }
 }
 
+// ---------- ฉาก: ธีมสี (ฐาน) + ภาพอนิเมะจาก AI (เสริม) ----------
+const THEMES = {
+  forest: "linear-gradient(160deg,#052e1c,#14532d 55%,#1e3a2a)",
+  cave: "linear-gradient(160deg,#0b0b14,#1c1830 60%,#2b1d3a)",
+  town: "linear-gradient(160deg,#1e293b,#3b2f4a 60%,#7c4a3a)",
+  sea: "linear-gradient(160deg,#082f49,#0c4a6e 55%,#155e75)",
+  ruins: "linear-gradient(160deg,#1c1917,#44403c 60%,#57534e)",
+  castle: "linear-gradient(160deg,#1e1b4b,#312e81 60%,#4c1d95)",
+  mountain: "linear-gradient(160deg,#0f172a,#334155 55%,#64748b)",
+  tavern: "linear-gradient(160deg,#2a1406,#78350f 60%,#b45309)",
+  mist: "linear-gradient(160deg,#0f172a,#1e3a4a 55%,#3b5b66)"
+};
+function applyTheme(t) { $("sceneBg").style.background = THEMES[t] || THEMES.mist; }
+
+const idb = () => new Promise((res, rej) => {
+  const r = indexedDB.open("solo_dnd", 1);
+  r.onupgradeneeded = () => r.result.createObjectStore("scenes");
+  r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+async function imgGet(k) {
+  try { const db = await idb(); return await new Promise(res => { const q = db.transaction("scenes").objectStore("scenes").get(k); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+  catch (e) { return null; }
+}
+async function imgPut(k, v) { try { const db = await idb(); db.transaction("scenes", "readwrite").objectStore("scenes").put(v, k); } catch (e) {} }
+const shrink = src => new Promise((res, rej) => {
+  const i = new Image();
+  i.onload = () => {
+    const w = Math.min(1024, i.width), h = Math.round(i.height * w / i.width);
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    c.getContext("2d").drawImage(i, 0, 0, w, h); res(c.toDataURL("image/jpeg", 0.72));
+  };
+  i.onerror = () => rej(new Error("อ่านภาพไม่ได้")); i.src = src;
+});
+async function generateSceneImage(sc) {
+  const prompt = `Japanese anime background illustration, hand-painted scenery, soft cinematic lighting, rich colors, wide 16:9 landscape, no people, no text, no watermark. Scene: ${sc.prompt || sc.place}`;
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(imgModel)}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ["TEXT", "IMAGE"] } })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error?.message || "สร้างภาพไม่สำเร็จ");
+  const part = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData || p.inline_data);
+  const b = part && (part.inlineData || part.inline_data);
+  if (!b) throw new Error("โมเดลไม่ส่งภาพกลับมา");
+  return shrink(`data:${b.mimeType || b.mime_type || "image/png"};base64,${b.data}`);
+}
+let sceneToken = 0;
+async function setScene(sc, generate = true) {
+  if (!sc || !sc.place) return;
+  currentScene = { place: String(sc.place).slice(0, 60), type: String(sc.type || "mist"), prompt: String(sc.prompt || "").slice(0, 300) };
+  try { localStorage.setItem("DND_SCENE_V1", JSON.stringify(currentScene)); } catch (e) {}
+  applyTheme(currentScene.type);
+  const label = "📍 " + currentScene.place, my = ++sceneToken, img = $("sceneImg");
+  $("sceneLabel").textContent = label;
+  img.style.opacity = 0;
+  if (!imgGen) return;
+  const key = currentScene.place.toLowerCase();
+  let data = await imgGet(key);
+  if (!data && generate && apiKey) {
+    $("sceneLabel").textContent = label + " ⏳";
+    try { data = await generateSceneImage(currentScene); imgPut(key, data); }
+    catch (e) { console.warn(e); appendMessage("System", "สร้างภาพฉากไม่สำเร็จ ใช้ธีมสีแทน: " + e.message, "system"); }
+    if (my === sceneToken) $("sceneLabel").textContent = label;
+  }
+  if (data && my === sceneToken) { img.onload = () => { img.style.opacity = 1; }; img.src = data; }
+}
+
+// ---------- HP / ไอเทม / Death Save ----------
+function saveState() { try { localStorage.setItem("DND_STATE_V1", JSON.stringify({ downed, dead, ds })); } catch (e) {} }
+function loadState() { try { const o = JSON.parse(localStorage.getItem("DND_STATE_V1") || "null"); if (o) { downed = !!o.downed; dead = !!o.dead; ds = o.ds || ds; } } catch (e) {} }
+function canAct() {
+  if (dead) { alert("ตัวละครเสียชีวิตแล้ว รีเซ็ตเนื้อเรื่องเพื่อเริ่มใหม่"); return false; }
+  if (downed) { alert("ตัวละครล้มลงที่ HP 0 ต้องทอย Death Save ก่อน"); openDiceUI(); return false; }
+  return true;
+}
+function updateVitals() {
+  const bar = $("hpBar"); if (!bar) return;
+  const cur = parseInt($("currentHp").value) || 0, max = parseInt($("maxHp").value) || 1;
+  const pct = Math.max(0, Math.min(100, cur / max * 100));
+  bar.style.width = pct + "%";
+  bar.className = "h-full transition-all " + (pct > 50 ? "bg-emerald-500" : pct > 25 ? "bg-amber-500" : "bg-rose-500");
+  $("hpText").textContent = `HP ${cur}/${max}`; $("hpMini").textContent = `HP ${cur}/${max}`;
+  $("downText").textContent = dead ? "💀 เสียชีวิต" : downed ? `ล้มลง · Death Save ✓${ds.s} ✗${ds.f}` : "";
+}
+function applyHp(delta) {
+  const cur = parseInt($("currentHp").value) || 0, max = parseInt($("maxHp").value) || 12;
+  const next = Math.max(0, Math.min(max, cur + delta));
+  if (next === cur) return;
+  $("currentHp").value = next; saveSheet();
+  appendMessage("System", `HP ${next - cur > 0 ? "+" : ""}${next - cur} (${next}/${max})`, "system");
+  if (next < cur) applyMood("pained");
+  if (next === 0 && cur > 0 && !dead) {
+    downed = true; ds = { s: 0, f: 0 }; saveState();
+    appendMessage("System", "💔 HP เหลือ 0 ตัวละครล้มลง! ต้องทอย Death Save (d20 ตั้งแต่ 10 ขึ้นไปจึงสำเร็จ)", "system");
+    setPending(10, "Death Save"); openDiceUI(); updateVitals();
+  } else if (next > 0 && downed) {
+    downed = false; ds = { s: 0, f: 0 }; saveState(); updateVitals();
+    appendMessage("System", "ฟื้นสติแล้ว!", "system"); applyMood("worried");
+  }
+}
+function handleDeathSave(r) {
+  if (r.chosen === 20) {
+    downed = false; ds = { s: 0, f: 0 }; $("currentHp").value = 1; saveSheet();
+    appendMessage("System", "Death Save 20 แท้! ฟื้นสติด้วย HP 1", "system"); applyMood("determined");
+  } else {
+    if (r.chosen === 1) ds.f += 2; else if (r.total >= 10) ds.s++; else ds.f++;
+    appendMessage("System", `Death Save: สำเร็จ ${ds.s}/3 · ล้มเหลว ${Math.min(ds.f, 3)}/3`, "system");
+    if (ds.f >= 3) { dead = true; downed = false; appendMessage("System", "💀 ตัวละครเสียชีวิต รีเซ็ตเนื้อเรื่องเพื่อเริ่มใหม่", "system"); applyMood("sad"); }
+    else if (ds.s >= 3) { downed = false; ds = { s: 0, f: 0 }; appendMessage("System", "อาการคงที่ แต่ยังสลบอยู่ที่ HP 0 (พักหรือรักษาเพื่อฟื้น)", "system"); }
+  }
+  saveState(); updateVitals();
+}
+function removeFrom(id, name, label) {
+  const el = $(id), strip = l => l.replace(/^[•\-*]\s*/, "").trim().toLowerCase(), n = strip(String(name));
+  if (!n) return;
+  const lines = el.value.split("\n");
+  let i = lines.findIndex(l => strip(l) === n);
+  if (i < 0) i = lines.findIndex(l => strip(l) && (strip(l).includes(n) || n.includes(strip(l))));
+  if (i < 0) return;
+  const removed = lines.splice(i, 1)[0].replace(/^[•\-*]\s*/, "").trim();
+  el.value = lines.join("\n"); saveSheet();
+  appendMessage("System", `${label}: ${removed}`, "system");
+}
+function renderChips() {
+  const box = $("itemChips"); if (!box) return;
+  const items = $("charInventory").value.split("\n").map(l => l.replace(/^[•\-*]\s*/, "").trim()).filter(Boolean).slice(0, 30);
+  box.innerHTML = items.map(n => `<button data-use="${escapeHtml(n)}" class="bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/60 text-slate-300 rounded-full px-2.5 py-0.5 text-[11px]">${escapeHtml(n)} <span class="text-amber-400">ใช้</span></button>`).join("");
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-use]"); if (!b || !canAct()) return;
+  if (window.innerWidth < 768) switchMobileTab("story");
+  sendDirectAction(`ฉันใช้ไอเทม: ${b.dataset.use}`);
+});
+
+// ---------- รูปหน้า + สีหน้า ----------
+const MOODS = {
+  neutral: ["ปกติ", "calm neutral"], happy: ["ยิ้ม", "smiling happily"], smug: ["ภูมิใจ", "proud confident smirk"],
+  angry: ["โกรธ", "angry glare"], sad: ["เศร้า", "sad, teary eyes"], surprised: ["ตกใจ", "shocked, wide eyes"],
+  determined: ["มุ่งมั่น", "determined, resolute"], worried: ["กังวล", "worried, anxious"], pained: ["เจ็บปวด", "in pain, grimacing"]
+};
+function moodFromVerdict(t) {
+  if (t.includes("วิกฤต")) return t.includes("สำเร็จ") ? "smug" : "surprised";
+  if (t.includes("ยับเยิน")) return "pained";
+  if (t.includes("หวุดหวิด")) return "worried";
+  return t.includes("สำเร็จ") ? "happy" : "sad";
+}
+let currentMood = "neutral";
+async function applyMood(m) {
+  if (!MOODS[m]) m = "neutral";
+  currentMood = m; $("moodLabel").textContent = MOODS[m][0];
+  const src = (await imgGet("portrait:" + m)) || (await imgGet("portrait:neutral")) || localStorage.getItem("DND_AVATAR") || "";
+  if (currentMood !== m) return;
+  ["moodImg", "moodMini"].forEach(id => { const im = $(id); if (src) { im.src = src; im.classList.remove("hidden"); } else im.classList.add("hidden"); });
+  $("moodPh").classList.toggle("hidden", !!src);
+}
+async function callImage(parts) {
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(imgModel)}:generateContent`, {
+    method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ["TEXT", "IMAGE"] } })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error?.message || "สร้างภาพไม่สำเร็จ");
+  const part = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData || p.inline_data);
+  const b = part && (part.inlineData || part.inline_data);
+  if (!b) throw new Error("โมเดลไม่ส่งภาพกลับมา");
+  return shrink(`data:${b.mimeType || b.mime_type || "image/png"};base64,${b.data}`);
+}
+function portraitImage(mood, ref) {
+  const g = id => $(id).value.trim();
+  const base = `Japanese anime character portrait, bust-up, facing the viewer, soft lighting, simple soft background, no text, no watermark. Character: ${g("charName")}, ${g("charClass")}. Appearance: ${g("charLook") || "not specified, design to fit the class"}. Personality: ${g("charPersonality").slice(0, 200)}.`;
+  const parts = ref
+    ? [{ inlineData: { mimeType: "image/jpeg", data: ref.split(",")[1] } }, { text: `${base} Use the attached image as reference: keep the exact same character design, face, hairstyle, outfit and art style. Change only the facial expression to: ${MOODS[mood][1]}.` }]
+    : [{ text: `${base} Facial expression: ${MOODS[mood][1]}.` }];
+  return callImage(parts);
+}
+let genBusy = false;
+async function generatePortraitSlot(mood) {
+  if (genBusy) return;
+  if (!apiKey) { alert("ใส่ API Key ในหน้าตั้งค่าก่อน"); return; }
+  genBusy = true; const st = $("portraitStatus");
+  try {
+    let ref = mood === "neutral" ? null : await imgGet("portrait:neutral");
+    if (mood !== "neutral" && !ref) { st.textContent = "กำลังสร้างภาพหลักก่อน ⏳"; ref = await portraitImage("neutral", null); await imgPut("portrait:neutral", ref); }
+    st.textContent = `กำลังสร้าง "${MOODS[mood][0]}" ⏳`;
+    await imgPut("portrait:" + mood, await portraitImage(mood, ref));
+    st.textContent = "เสร็จแล้ว ✅";
+  } catch (e) { st.textContent = "สร้างไม่สำเร็จ: " + e.message; }
+  genBusy = false; renderMoodGrid(); applyMood(currentMood);
+}
+window.generateAllPortraits = async () => {
+  for (const k of Object.keys(MOODS)) {
+    if (await imgGet("portrait:" + k)) continue;
+    await generatePortraitSlot(k);
+    if ($("portraitStatus").textContent.includes("ไม่สำเร็จ")) break;
+  }
+};
+async function renderMoodGrid() {
+  let h = "";
+  for (const k of Object.keys(MOODS)) {
+    const d = await imgGet("portrait:" + k);
+    h += `<div class="bg-slate-950/60 border border-slate-800 rounded-lg p-1.5 flex flex-col gap-1">
+      <div class="aspect-[4/5] rounded bg-slate-900 overflow-hidden flex items-center justify-center">${d ? `<img src="${d}" class="w-full h-full object-cover">` : '<i class="fa-solid fa-image text-slate-700"></i>'}</div>
+      <div class="text-center text-[11px] text-amber-300">${MOODS[k][0]}</div>
+      <div class="flex gap-1"><button data-up="${k}" class="flex-1 bg-slate-800 hover:bg-slate-700 rounded py-1 text-[10px]">อัปโหลด</button><button data-gen="${k}" class="flex-1 bg-amber-600/80 hover:bg-amber-500 text-slate-950 rounded py-1 text-[10px] font-bold">สร้าง</button></div></div>`;
+  }
+  $("moodGrid").innerHTML = h;
+}
+window.openPortraitModal = () => { $("portraitModal").classList.remove("hidden"); $("portraitModal").classList.add("flex"); renderMoodGrid(); };
+window.closePortraitModal = () => { $("portraitModal").classList.add("hidden"); $("portraitModal").classList.remove("flex"); };
+let portraitTarget = "neutral";
+$("moodGrid").addEventListener("click", e => {
+  const u = e.target.closest("[data-up]"), g = e.target.closest("[data-gen]");
+  if (u) { portraitTarget = u.dataset.up; $("portraitFile").click(); }
+  if (g) generatePortraitSlot(g.dataset.gen);
+});
+$("portraitFile").addEventListener("change", e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = async ev => { try { await imgPut("portrait:" + portraitTarget, await shrink(ev.target.result)); renderMoodGrid(); applyMood(currentMood); } catch (err) { $("portraitStatus").textContent = "อ่านภาพไม่ได้"; } };
+  rd.readAsDataURL(f);
+});
+
+loadState();
 loadSavedSheet();
 loadStory();
+renderChips(); applyMood("neutral"); updateVitals();
+try {
+  const sc = JSON.parse(localStorage.getItem("DND_SCENE_V1") || "null");
+  if (sc) setScene(sc, false); else applyTheme("mist");
+} catch (e) { applyTheme("mist"); }
 </script>
 </body>
 </html>
