@@ -1749,5 +1749,70 @@ MP.recv = function (m) {
 // ---- 8) UI: แบนเนอร์ DM กำลังเล่า + ปิดปุ่มเทิร์นของคนอื่นบน Host ----
 $("narrativeBox").insertAdjacentHTML("beforebegin", `<div id="mpBusy" class="hidden text-center text-[11px] text-amber-300 py-0.5">⏳ DM กำลังเล่าเรื่อง…</div>`);
 </script>
+<script>
+// ================= FIX: ออนไลน์ข้ามเครือข่าย (TURN) =================
+// ปัญหาเดิม: new Peer() ใช้แค่ STUN ของ Google ไม่มี TURN
+// พอผู้เล่นอยู่คนละเครือข่าย (โดยเฉพาะมือถือ 4G/5G ที่เป็น CGNAT / Symmetric NAT) P2P จะต่อกันไม่ได้
+// วิธีแก้: ใส่ TURN server (ตัว relay) ให้ทั้ง Host และคนเข้าห้อง
+//
+// >>> ใส่ค่า TURN ของคุณตรงนี้ (สมัครฟรีที่ https://dashboard.metered.ca/signup แล้วก๊อปอาร์เรย์ iceServers มาวาง) <<<
+const iceServers = [
+  {
+    urls: "stun:stun.relay.metered.ca:80",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80",
+    username: "e6540f80e5bb8fc08db6a1d1",
+    credential: "IW7HcWZW5SAGzt3C",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+    username: "e6540f80e5bb8fc08db6a1d1",
+    credential: "IW7HcWZW5SAGzt3C",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:443",
+    username: "e6540f80e5bb8fc08db6a1d1",
+    credential: "IW7HcWZW5SAGzt3C",
+  },
+  {
+    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+    username: "e6540f80e5bb8fc08db6a1d1",
+    credential: "IW7HcWZW5SAGzt3C",
+  },
+];
+// (ทางเลือก) วางค่า iceServers เป็น JSON ผ่านคอนโซลครั้งเดียวต่อเครื่อง:
+//   localStorage.setItem("DND_TURN", JSON.stringify([...]))
+let _userTurn = []; try { _userTurn = JSON.parse(localStorage.getItem("DND_TURN") || "[]"); } catch (e) {}
+const MP_ICE = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun.cloudflare.com:3478" },
+  ...TURN_SERVERS, ..._userTurn
+];
+const HAS_TURN = MP_ICE.some(x => String(x.urls).startsWith("turn"));
+
+const _PeerOrig = window.Peer;
+window.Peer = function (id, opts) {
+  if (id && typeof id === "object") { opts = id; id = undefined; }
+  opts = { ...(opts || {}), config: { iceServers: MP_ICE, iceCandidatePoolSize: 4 } };
+  return id ? new _PeerOrig(id, opts) : new _PeerOrig(opts);
+};
+window.Peer.prototype = _PeerOrig.prototype;
+
+// เข้าห้อง: ตัดช่องว่าง/ตัวพิมพ์ใหญ่ + แจ้งเตือนถ้าต่อไม่ติดภายใน 20 วินาที (เดิมเงียบไปเฉยๆ)
+const _mpJoin = MP.join;
+MP.join = function () {
+  const el = $("mpJoinCode"); el.value = el.value.trim().toLowerCase(); if (!el.value) return;
+  _mpJoin();
+  let err = false; if (MP.peer) MP.peer.on("error", () => { err = true; });
+  setTimeout(() => {
+    if (!MP.on && !err) alert("เชื่อมต่อห้องไม่สำเร็จ (หมดเวลา)\n" + (HAS_TURN
+      ? "ตรวจว่ารหัสห้องถูกต้อง และ Host ยังเปิดหน้าเว็บค้างไว้อยู่"
+      : "สาเหตุที่พบบ่อย: ผู้เล่นอยู่คนละเครือข่ายและยังไม่ได้ตั้งค่า TURN server (ดูค่า TURN_SERVERS ในโค้ด)"));
+  }, 20000);
+};
+if (!HAS_TURN) console.warn("[MP] ยังไม่ได้ตั้งค่า TURN — ผู้เล่นต่างเครือข่ายอาจเชื่อมต่อไม่ได้");
+</script>
 </body>
 </html>
