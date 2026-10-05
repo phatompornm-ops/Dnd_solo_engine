@@ -18,6 +18,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
 @keyframes tumble{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
 .shake{animation:shake .5s}.pop{animation:pop .45s}.tumble{animation:tumble .12s linear infinite}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
 
@@ -42,33 +43,32 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
       </div>
       <input type="file" id="avatarFileInput" accept="image/*" class="hidden" onchange="handleAvatarCompress(event)">
       <div class="flex-1 min-w-0">
-        <input id="charName" value="King Halo" class="editable font-bold text-amber-300 text-sm w-full truncate" onchange="saveSheet()">
-        <input id="charClass" value="Paladin (Oath of Glory) | Lv. 1" class="editable text-[11px] text-slate-400 w-full mt-0.5 truncate" onchange="saveSheet()">
+        <input id="charName" value="" placeholder="ชื่อตัวละคร..." class="editable font-bold text-amber-300 text-sm w-full truncate" onchange="saveSheet()">
+        <input id="charClass" value="" placeholder="คลาส | เลเวล เช่น Fighter | Lv. 1" class="editable text-[11px] text-slate-400 w-full mt-0.5 truncate" onchange="saveSheet()">
       </div>
     </div>
     <div class="grid grid-cols-4 gap-1.5 mt-2.5 text-center">
       <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
         <span class="text-[9px] text-slate-400 block font-semibold">HP</span>
         <div class="flex justify-center items-center gap-0.5 mt-0.5">
-          <input id="currentHp" type="number" value="12" class="editable text-center text-emerald-400 font-bold text-xs w-7" onchange="saveSheet()">
+          <input id="currentHp" type="number" value="10" class="editable text-center text-emerald-400 font-bold text-xs w-7" onchange="saveSheet()">
           <span class="text-[10px] text-slate-600">/</span>
-          <input id="maxHp" type="number" value="12" class="editable text-center text-slate-400 text-xs w-7" onchange="saveSheet()">
+          <input id="maxHp" type="number" value="10" class="editable text-center text-slate-400 text-xs w-7" onchange="saveSheet()">
         </div>
       </div>
       <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
         <span class="text-[9px] text-slate-400 block font-semibold">AC</span>
-        <input id="charAc" type="number" value="16" class="editable text-center text-sky-400 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
+        <input id="charAc" type="number" value="10" class="editable text-center text-sky-400 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
       </div>
       <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
         <span class="text-[9px] text-slate-400 block font-semibold">Speed</span>
-        <input id="charSpeed" value="35 ft" class="editable text-center text-amber-400 text-xs w-full mt-0.5" onchange="saveSheet()">
+        <input id="charSpeed" value="30 ft" class="editable text-center text-amber-400 text-xs w-full mt-0.5" onchange="saveSheet()">
       </div>
       <div class="bg-slate-950/80 p-1 rounded border border-slate-800">
         <span class="text-[9px] text-amber-400 block font-semibold">Pride</span>
         <input id="charPride" type="number" value="2" class="editable text-center text-amber-300 font-bold text-xs w-full mt-0.5" onchange="saveSheet()">
       </div>
     </div>
-    <!-- แก้ข้อ 5: ปุ่มพักอยู่ในการ์ดตัวละคร ใช้ได้ทั้ง PC และมือถือ -->
     <div class="grid grid-cols-2 gap-1.5 mt-2.5">
       <button onclick="takeShortRest()" class="bg-slate-900 hover:bg-slate-700 text-amber-300 border border-slate-700 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-mug-hot mr-1"></i>Short Rest</button>
       <button onclick="takeLongRest()" class="bg-slate-900 hover:bg-slate-700 text-emerald-400 border border-slate-700 py-1.5 rounded-lg text-xs"><i class="fa-solid fa-bed mr-1"></i>Long Rest</button>
@@ -108,30 +108,30 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
         <select id="diceTypePC" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
           <option value="20" selected>d20</option><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option>
         </select>
-        <input type="number" id="diceModPC" value="2" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center">
+        <input type="number" id="diceModPC" value="0" class="w-12 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center">
         <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="advCheckPC" class="accent-amber-500"> Adv</label><label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="disCheckPC" class="accent-rose-500"> Dis</label>
         <button onclick="executeRoll('PC')" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-1 rounded text-xs">ทอยเต๋า</button>
       </div>
     </div>
     <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[110px]">
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-briefcase mr-1"></i> กระเป๋าไอเทม</span>
-      <textarea id="charInventory" oninput="renderChips()" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="ช่องเก็บของ..."></textarea>
+      <textarea id="charInventory" oninput="renderChips()" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="เช่น ดาบยาว, เชือก 50 ฟุต, ขวดยาฟื้นพลัง..."></textarea>
       <div id="itemChips" class="flex flex-wrap gap-1.5 mt-1.5"></div>
     </div>
     <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[90px]">
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-users mr-1"></i> สหายปาร์ตี้ (NPC)</span>
-      <textarea id="charParty" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="พรรคพวก..."></textarea>
+      <textarea id="charParty" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="พรรคพวกที่ร่วมทาง..."></textarea>
     </div>
   </div>
 
   <div id="subTabLorePane" class="flex-1 hidden flex-col gap-2.5 overflow-y-auto chat-scroll pr-1">
     <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[120px]">
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-user-tag mr-1"></i> บุคลิก & ภูมิหลัง</span>
-      <textarea id="charPersonality" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()">คุณหนูตระกูลสูงศักดิ์ ผู้รักเกียรติยศและความสง่างาม ปฏิเสธความช่วยเหลือจากตระกูลเพื่อพิสูจน์ชัยชนะด้วยตนเอง เป็นคนปากร้ายใจดี เกลียดความอยุติธรรมและการดูถูก</textarea>
+      <textarea id="charPersonality" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="อธิบายบุคลิก นิสัย จุดอ่อน หรือปมเบื้องหลังของตัวละคร..."></textarea>
     </div>
     <div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800 flex flex-col flex-1 min-h-[140px]">
       <span class="text-xs text-amber-300 font-semibold mb-1"><i class="fa-solid fa-earth-americas mr-1"></i> ข้อมูลโลก & แคมเปญ</span>
-      <textarea id="worldLore" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()">แคมเปญ: The Gilded Pride of Silvermist (ดินแดนหุบเขาซิลเวอร์มิสต์ ถูกปกคลุมด้วยสายหมอกเวทมนตร์ มีซากอารยธรรมจักรวรรดิเก่า มีพวกสลัดหมอกออกปล้นสะดม และมีอันตรายจากสัตว์อสูรสายหมอก)</textarea>
+      <textarea id="worldLore" class="w-full flex-1 bg-slate-950/60 border border-slate-800 rounded p-2 text-xs text-slate-300 resize-none outline-none" onchange="saveSheet()" placeholder="กำหนดธีมของโลก แคมเปญ หรือบรรยากาศที่อยากเล่น..."></textarea>
     </div>
   </div>
 <div id="subTabRulesPane" class="flex-1 hidden flex-col gap-2.5 overflow-y-auto chat-scroll pr-1"><div id="rulesBox" class="flex flex-col gap-2.5"></div></div>
@@ -170,7 +170,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
   <div id="narrativeBox" class="flex-1 p-3.5 sm:p-5 overflow-y-auto chat-scroll flex flex-col gap-3.5 max-w-4xl mx-auto w-full">
     <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-lg shadow">
       <p class="font-bold text-amber-300 text-xs mb-1"><i class="fa-solid fa-dungeon mr-1"></i> Dungeon Master</p>
-      <div class="text-xs sm:text-sm leading-relaxed text-slate-200">ยินดีต้อนรับสู่แคมเปญ Solo DnD! กดชอยส์ที่ DM เสนอ หรือพิมพ์การกระทำอิสระของคุณเอง แล้ว DM จะกำหนดค่า DC ให้ทอยเต๋าตัดสินผลครับ</div>
+      <div class="text-xs sm:text-sm leading-relaxed text-slate-200">ยินดีต้อนรับสู่แคมเปญ Solo DnD! ตั้งค่าตัวละครในแท็บซ้าย แล้วพิมพ์การกระทำหรือสิ่งที่อยากเริ่มต้นได้เลยครับ</div>
     </div>
   </div>
 
@@ -180,7 +180,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
       <button onclick="triggerQuickAction('ฉันขอตรวจสอบพื้นที่รอบตัวอย่างละเอียด เพื่อหาเบาะแส ร่องรอย หรือกลิ่นอายเวทมนตร์')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-magnifying-glass text-sky-400 mr-1"></i>สำรวจพื้นที่</button>
       <button onclick="usePrideAdvantage()" class="bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-500/50 px-3 py-2 rounded-lg text-xs whitespace-nowrap font-semibold"><i class="fa-solid fa-crown text-amber-400 mr-1"></i>ใช้ Pride (Adv)</button>
       <button onclick="triggerQuickAction('ขอให้ DM เสนอทางเลือก 2-3 ข้อตามกฎ DnD พร้อมระบุค่า DC ที่ต้องทอยสำหรับสถานการณ์นี้')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>ขอช้อยส์ + DC</button>
-      <button onclick="triggerQuickAction('ฉันตั้งท่าชักดาบเรเปียร์เตรียมพร้อมต่อสู้ ท้าทายศัตรูอย่างสง่างาม')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-shield-halved text-rose-400 mr-1"></i>ตั้งท่าต่อสู้</button>
+      <button onclick="triggerQuickAction('ฉันตั้งท่าชักอาวุธเตรียมพร้อมต่อสู้ ท้าทายศัตรูอย่างมั่นใจ')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-lg text-xs whitespace-nowrap"><i class="fa-solid fa-shield-halved text-rose-400 mr-1"></i>ตั้งท่าต่อสู้</button>
     </div>
   </div>
 
@@ -202,7 +202,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     <select id="diceTypeMobile" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs">
       <option value="20" selected>d20</option><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option>
     </select>
-    <input type="number" id="diceModMobile" value="2" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center">
+    <input type="number" id="diceModMobile" value="0" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center">
     <label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="advCheckMobile" class="accent-amber-500"> Adv</label><label class="flex items-center gap-1 text-xs cursor-pointer"><input type="checkbox" id="disCheckMobile" class="accent-rose-500"> Dis</label>
   </div>
   <button onclick="executeRoll('Mobile')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-lg text-xs">🎲 ทอยเต๋าเดี๋ยวนี้</button>
@@ -220,13 +220,13 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     </div>
     <div>
       <label class="block text-slate-400 mb-1">รูปลักษณ์ตัวละคร (ใช้สร้างภาพร่วมกับชื่อ คลาส และบุคลิกใน Lore):</label>
-      <textarea id="charLook" rows="3" onchange="saveSheet()" placeholder="เช่น หญิงสาวผมยาวสีทอง ตาสีฟ้า สวมเกราะขาวทอง..." class="w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none focus:border-amber-500 resize-none"></textarea>
+      <textarea id="charLook" rows="3" onchange="saveSheet()" placeholder="เช่น นักรบเกราะเงิน ดวงตาเด็ดเดี่ยว..." class="w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none focus:border-amber-500 resize-none"></textarea>
     </div>
     <div class="flex gap-2">
       <button onclick="generatePortraitSlot('neutral')" class="flex-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold py-1.5 rounded">สร้างภาพหลักจาก Lore</button>
       <button onclick="generateAllPortraits()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 py-1.5 rounded">สร้างสีหน้าที่เหลือ</button>
     </div>
-    <p class="text-[10px] text-slate-500">ใช้โมเดลภาพที่ตั้งไว้ อาจมีค่าใช้จ่ายตามบัญชี Google ของคุณ สีหน้าอื่นจะอิงภาพหลักเพื่อให้หน้าตาใกล้เคียงกัน แต่ไม่รับประกันว่าจะเหมือนทุกภาพ หรืออัปโหลดภาพเองเป็นช่องๆ ก็ได้ อย่าใช้ภาพถ่ายของคนอื่น</p>
+    <p class="text-[10px] text-slate-500">ใช้โมเดลภาพที่ตั้งไว้ อาจมีค่าใช้จ่ายตามบัญชี Google ของคุณ สีหน้าอื่นจะอิงภาพหลักเพื่อให้หน้าตาใกล้เคียงกัน</p>
     <div id="portraitStatus" class="text-amber-300 min-h-[16px]"></div>
     <div id="moodGrid" class="grid grid-cols-3 gap-2"></div>
   </div>
@@ -280,11 +280,11 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
     </div>
     <div class="border-t border-slate-800 pt-2">
       <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="imgGenToggle" class="accent-amber-500"> สร้างภาพฉากแนวอนิเมะด้วย AI</label>
-      <p class="text-[10px] text-slate-500 mt-1">อาจมีค่าใช้จ่ายหรือใช้โควตาของบัญชี Google คุณ ปิดไว้จะใช้ธีมสีตามฉากแทน หากสร้างภาพไม่สำเร็จก็ถอยกลับไปใช้ธีมสีเอง</p>
+      <p class="text-[10px] text-slate-500 mt-1">ปิดไว้จะใช้ธีมสีตามฉากแทน หากสร้างภาพไม่สำเร็จจะถอยกลับไปใช้ธีมสีเอง</p>
       <input id="imgModelInput" placeholder="โมเดลสร้างภาพ" class="mt-1.5 w-full bg-slate-950 border border-slate-700 rounded p-2 outline-none focus:border-amber-500">
     </div>
     <div class="flex justify-between items-center pt-2 border-t border-slate-800">
-      <button onclick="clearAdventureData()" class="text-rose-400 hover:underline">รีเซ็ตเนื้อเรื่อง</button>
+      <button onclick="clearAdventureData()" class="text-rose-400 hover:underline">รีเซ็ตเนื้อเรื่องและตัวละคร</button>
       <button onclick="saveApiKeyModal()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded">บันทึก</button>
     </div>
   </div>
@@ -312,7 +312,6 @@ const ROLL_MODES = {
   relaxed: "[ระดับการทอย: ผ่อนคลาย] สั่งทอยเฉพาะการต่อสู้ ภาวะเสี่ยงอันตราย หรือจังหวะตึงเครียดจริงๆ ที่เหลือให้ผ่านและเล่าเรื่องต่อ"
 };
 
-// แก้ข้อ 3: escape HTML ก่อนแสดงผลทุกครั้ง
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -330,23 +329,21 @@ const SYSTEM_RULES = `คุณคือ Dungeon Master (DM) มืออาช�
 [ชอยส์ 2]: ข้อความการกระทำ (ทอย d20 + ทักษะ DC xx)
 5. อัปเดตสเตตัสเฉพาะสิ่งที่เปลี่ยนจริงในข้อความนี้ ด้วยแท็กท้ายคำตอบ:
 <<<STATUS_SYNC: {"hpDelta": -4, "addItem": "ชื่อ", "removeItem": "ชื่อ", "addParty": "ชื่อ", "removeParty": "ชื่อ"}>>>
-- hpDelta คือจำนวนที่ HP เปลี่ยน (ลบ=เสียเลือด บวก=ฟื้น) ห้ามใส่ HP สัมบูรณ์ ให้สมเหตุสมผลกับความรุนแรง (ศัตรูทั่วไป 1d6-2d6, อันตรายหนัก 2d8 ขึ้นไป)
-- key เพิ่มเติม: "xp" (XP ที่ได้จากเควสต์/แก้ปัญหา ฉากเล็ก 25-50 ฉากใหญ่ 100-300 ส่วน XP จากการต่อสู้ระบบให้เอง), "advanceHours" (ชั่วโมงที่ผ่านไป), "supplies": {"rations": -1, "torches": -1}, "addCondition"/"removeCondition" (Poisoned, Frightened, Prone, Blinded, Restrained, Stunned, Exhausted), "spendResource": {"name": "ชื่อ", "amount": 1}, "spendSlot": ระดับช่องคาถา
+- hpDelta คือจำนวนที่ HP เปลี่ยน (ลบ=เสียเลือด บวก=ฟื้น) ห้ามใส่ HP สัมบูรณ์
+- key เพิ่มเติม: "xp", "advanceHours", "supplies": {"rations": -1, "torches": -1}, "addCondition"/"removeCondition", "spendResource": {"name": "ชื่อ", "amount": 1}, "spendSlot": ระดับช่องคาถา
 - ใส่เฉพาะ key ที่เปลี่ยนในรอบนี้ ห้ามเพิ่มของหรือสหายที่มีอยู่แล้ว ถ้าไม่มีอะไรเปลี่ยนไม่ต้องใส่แท็ก
-- ไอเทมที่ใช้หมด ถูกทำลาย หรือมอบให้ผู้อื่น ต้องใส่ removeItem ด้วยชื่อตามรายการ
 - ถ้า [สถานะ] ระบุว่าล้มลง (HP 0) ให้บรรยายว่าสลบและเสี่ยงตาย ห้ามให้ทำการกระทำอื่น ผล Death Save มาจากระบบ
-6. เมื่อตัวละครย้ายไปสถานที่ใหม่หรือฉากเปลี่ยนอย่างชัดเจน (ไม่ใช่ทุกข้อความ) ให้ใส่แท็กท้ายคำตอบ:
+6. เมื่อตัวละครย้ายไปสถานที่ใหม่หรือฉากเปลี่ยนอย่างชัดเจน ให้ใส่แท็กท้ายคำตอบ:
 <<<SCENE: {"place": "ชื่อสถานที่ภาษาไทยสั้นๆ", "type": "forest|cave|town|sea|ruins|castle|mountain|tavern|mist", "prompt": "คำบรรยายภาพสถานที่เป็นภาษาอังกฤษ 1-2 ประโยค เน้นบรรยากาศและแสง ไม่มีตัวละคร"}>>>
-7. ใส่แท็กสีหน้าของตัวละครผู้เล่นท้ายคำตอบเมื่ออารมณ์เปลี่ยนตามเหตุการณ์: <<<MOOD: "happy">>> เลือกจาก neutral, happy, smug, angry, sad, surprised, determined, worried, pained
-8. จดบันทึกแคมเปญเมื่อเกิดเหตุการณ์สำคัญจริง (ไม่ต้องทุกข้อความ) ด้วยแท็กท้ายคำตอบ: <<<LOG: {"event": "สรุปเหตุการณ์ 1 ประโยค", "questAdd": "เควสต์ใหม่", "questDone": "เควสต์ที่สำเร็จ", "npc": {"name": "ชื่อ", "note": "สิ่งที่รู้ เช่น ท่าทีต่อผู้เล่น คำสัญญา"}}>>> ใส่เฉพาะ key ที่เกี่ยวข้อง ห้ามบันทึกซ้ำสิ่งที่มีใน [สมุดบันทึกแคมเปญ] และต้องเล่าให้สอดคล้องกับสมุดบันทึกเสมอ ทั้งคำสัญญา ศัตรูที่หนีไป และผลจากการเลือกก่อนหน้า
-9. การต่อสู้: เมื่อการต่อสู้เริ่มให้ใส่แท็ก <<<COMBAT: {"start": true, "enemies": [{"name": "ชื่อ", "hp": 11, "ac": 12, "atk": 4, "dmg": "1d6+2", "count": 2, "xp": 50}]}>>> ระบบจะทอย initiative ทอยโจมตี ดาเมจ และ HP ศัตรูเองทั้งหมด ห้ามคำนวณหรือสรุปผลโจมตีเอง ให้บรรยายตามข้อความ [ระบบต่อสู้ ...] ที่ระบบส่งมาเท่านั้น และไม่ต้องใส่ hpDelta/xp ของผลต่อสู้ซ้ำ ถ้าศัตรูหนีหรือยอมแพ้ ใส่ <<<COMBAT: {"end": true}>>> ศัตรูทั่วไป HP 7-15 AC 11-14 atk +3 ถึง +5 dmg 1d6+2 ปรับตามเลเวลผู้เล่น
-10. ผลทอยทักษะ/Save/โจมตี ระบบบวกโบนัสตามค่าพลังและทักษะใน [กฎ] ให้แล้ว ให้ตั้ง DC สมเหตุสมผลกับโบนัสนั้น และเมื่อผู้เล่นแจ้งว่าใช้ช่องคาถา ทรัพยากร หรือไอเทม (ข้อความ "ฉันใช้ ...") ให้ตัดสินผลตามนั้น ระบบหักทรัพยากรให้แล้ว`;
+7. ใส่แท็กสีหน้าของตัวละครผู้เล่นท้ายคำตอบเมื่ออารมณ์เปลี่ยนตามเหตุการณ์: <<<MOOD: "happy">>>
+8. จดบันทึกแคมเปญเมื่อเกิดเหตุการณ์สำคัญจริง ด้วยแท็กท้ายคำตอบ: <<<LOG: {"event": "สรุปเหตุการณ์ 1 ประโยค", "questAdd": "เควสต์ใหม่", "questDone": "เควสต์ที่สำเร็จ", "npc": {"name": "ชื่อ", "note": "สิ่งที่รู้"}}>>>
+9. การต่อสู้: เมื่อการต่อสู้เริ่มให้ใส่แท็ก <<<COMBAT: {"start": true, "enemies": [{"name": "ชื่อ", "hp": 11, "ac": 12, "atk": 4, "dmg": "1d6+2", "count": 1, "xp": 50}]}>>> ระบบจะทอย initiative ทอยโจมตี ดาเมจ และ HP ศัตรูเองทั้งหมด
+10. ผลทอยทักษะ/Save/โจมตี ระบบบวกโบนัสตามค่าพลังและทักษะใน [กฎ] ให้แล้ว ให้ตั้ง DC สมเหตุสมผลกับโบนัสนั้น`;
 
 function buildSystemInstruction() {
   const modeLine = (ROLL_MODES[rollMode] || ROLL_MODES.balanced) + (hideDC ? "\n[ซ่อน DC: ห้ามเขียนค่า DC ในคำบรรยาย ให้ระบุ DC เฉพาะในวงเล็บของชอยส์และแท็ก ROLL]" : "");
   const sceneLine = currentScene ? `[ฉากปัจจุบัน: ${currentScene.place}]` : "[ยังไม่มีฉากปัจจุบัน: ให้ใส่แท็ก SCENE ในคำตอบนี้]";
-  // ย้าย snapshot มาไว้ที่ systemInstruction ส่งครั้งเดียวต่อคำขอ ไม่ซ้ำใน history
-  const v = id => $(id).value.replace(/\n/g, ', ');
+  const v = id => ($(id).value || "ยังไม่ระบุ").replace(/\n/g, ', ');
   return `${SYSTEM_RULES}
 
 [ตัวละคร: ${v("charName")} | คลาส: ${v("charClass")} | HP: ${v("currentHp")}/${v("maxHp")} | AC: ${v("charAc")} | ไอเทม: ${v("charInventory")} | ปาร์ตี้: ${v("charParty")}]
@@ -369,7 +366,6 @@ window.switchMobileTab = tab => {
   setTabStyle($("tabCharBtn"), isChar);
   setTabStyle($("tabStoryBtn"), !isChar);
 };
-// กัน storyPane ค้างซ่อนเมื่อขยายจอข้าม 768px
 window.addEventListener("resize", () => {
   if (window.innerWidth >= 768) {
     $("storyPane").classList.remove("hidden");
@@ -459,7 +455,7 @@ function openDiceUI() {
   }
 }
 
-// ---------- Dice: ทอยแบบลุ้น มีแอนิเมชันและคำตัดสินเทียบ DC ----------
+// ---------- Dice ----------
 let pendingRoll = null, rollLock = false, lastRoll = null;
 function updateBanner() {
   let t = "";
@@ -568,7 +564,6 @@ window.selectChoice = text => {
     openDiceUI();
   } else if (/d20|ทอย/.test(text)) openDiceUI(); else sendAction();
 };
-// แก้ข้อ 2: event delegation + data-choice แทน inline onclick
 $("narrativeBox").addEventListener("click", e => {
   const b = e.target.closest("[data-choice]");
   if (b) selectChoice(b.dataset.choice);
@@ -588,35 +583,50 @@ function loadSavedSheet() {
     const d = JSON.parse(localStorage.getItem("DND_SHEET_DATA_V2") || "null");
     if (d) for (const k in FIELDS) if (d[k] !== undefined && d[k] !== null) $(FIELDS[k]).value = d[k];
   } catch (e) {}
-  // ล้างรายการซ้ำที่ค้างจากเวอร์ชันก่อน
-  ["charInventory", "charParty"].forEach(id => {
-    const seen = new Set();
-    $(id).value = $(id).value.split("\n").filter(l => {
-      const k = l.replace(/^[•\-*]\s*/, "").trim().toLowerCase();
-      if (!k || seen.has(k)) return false;
-      seen.add(k); return true;
-    }).join("\n");
-  });
   saveSheet();
   const av = localStorage.getItem("DND_AVATAR");
   if (av) { $("charAvatar").src = av; $("charAvatar").classList.remove("hidden"); $("avatarPlaceholder").classList.add("hidden"); }
 }
 window.clearAdventureData = () => {
-  if (!confirm("ต้องการรีเซ็ตประวัติการเล่นทั้งหมดหรือไม่?")) return;
-  chatHistory = []; msgLog = []; currentScene = null; localStorage.removeItem("DND_SCENE_V1"); applyTheme("mist"); $("sceneLabel").textContent = ""; $("sceneImg").style.opacity = 0;
+  if (!confirm("ต้องการรีเซ็ตข้อมูลตัวละครและเนื้อเรื่องทั้งหมดเป็นค่าว่างหรือไม่?")) return;
+  chatHistory = []; msgLog = []; currentScene = null; localStorage.removeItem("DND_SCENE_V1"); localStorage.removeItem("DND_SHEET_DATA_V2"); localStorage.removeItem("DND_RULES_V1"); localStorage.removeItem("DND_AVATAR");
+  applyTheme("mist"); $("sceneLabel").textContent = ""; $("sceneImg").style.opacity = 0;
+  
+  // ล้างข้อมูลตัวละครเป็นค่าว่าง
+  $("charName").value = "";
+  $("charClass").value = "";
+  $("currentHp").value = 10;
+  $("maxHp").value = 10;
+  $("charAc").value = 10;
+  $("charSpeed").value = "30 ft";
+  $("charPride").value = PRIDE_MAX;
+  $("charInventory").value = "";
+  $("charParty").value = "";
+  $("charPersonality").value = "";
+  $("worldLore").value = "";
+  $("charLook").value = "";
+  $("charAvatar").src = "";
+  $("charAvatar").classList.add("hidden");
+  $("avatarPlaceholder").classList.remove("hidden");
+  
+  rules = {
+    abil: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 }, level: 1, xp: 0, asi: 0, skills: [], saves: [], cls: "",
+    hd: { cur: 1, max: 1, die: 8 }, res: [], slots: [], conds: [], time: { day: 1, hour: 8 }, sup: { rations: 5, torches: 3 },
+    weapon: { name: "อาวุธ", dice: "1d8", ability: "auto" }
+  };
+  saveRules(); renderRules();
+
   downed = false; dead = false; ds = { s: 0, f: 0 }; saveState();
-  if (!parseInt($("currentHp").value)) { $("currentHp").value = $("maxHp").value; saveSheet(); }
   journal = { summary: "", events: [], quests: [], npcs: {} }; saveJournal(); renderJournal();
   combat = null; renderCombat();
-  applyMood("neutral"); updateVitals();
+  applyMood("neutral"); updateVitals(); renderChips();
   $("narrativeBox").innerHTML = "";
-  appendMessage("Dungeon Master", "ประวัติถูกรีเซ็ตแล้ว เริ่มการผจญภัยครั้งใหม่ได้เลย!", "dm");
+  appendMessage("Dungeon Master", "รีเซ็ตทุกอย่างแล้ว! กรุณาใส่ข้อมูลตัวละครของคุณในแผงด้านซ้าย แล้วเริ่มการผจญภัยได้เลย", "dm");
   toggleSettingsModal();
 };
 
 window.sendAction = () => {
   const input = $("playerInput");
-  // ลบแท็กผลทอยที่ผู้เล่นพิมพ์เอง เหลือเฉพาะแท็กที่ระบบสร้าง
   let t = input.value.trim().replace(/\[ผลทอยเต๋า:[^\]]*\]/g, m => m === lastRollTag ? m : "").trim();
   if (!t) { input.value = ""; return; }
   const hasRoll = lastRollTag && t.includes(lastRollTag);
@@ -644,7 +654,7 @@ async function sendDirectAction(text, asSystem = false) {
   const sendBtn = $("sendBtn"); sendBtn.disabled = true; sendBtn.classList.add("opacity-50");
 
   if (chatHistory.length > MAX_HISTORY_TURNS * 2) chatHistory = chatHistory.slice(-MAX_HISTORY_TURNS * 2);
-  while (chatHistory.length && chatHistory[0].role !== "user") chatHistory.shift(); // history ต้องขึ้นต้นด้วย user
+  while (chatHistory.length && chatHistory[0].role !== "user") chatHistory.shift();
   chatHistory.push({ role: "user", parts: [{ text }] });
 
   try {
@@ -673,12 +683,12 @@ async function sendDirectAction(text, asSystem = false) {
           const name = bullet(v).trim();
           if (!name) return;
           const exists = el.value.split("\n").some(l => bullet(l).trim().toLowerCase() === name.toLowerCase());
-          if (exists) return; // ข้ามถ้ามีอยู่แล้ว
+          if (exists) return;
           el.value = (el.value.trim() ? el.value.trim() + "\n" : "") + "• " + name;
           appendMessage("System", `${label}: ${name}`, "system");
         };
         const dh = parseInt(sync.hpDelta);
-        if (!isNaN(dh) && dh !== 0) applyHp(dh);
+        if (!isNaN(dh) && dh !== 0) MP.hp(sync, dh);
         else if (isNaN(dh) && sync.hp !== undefined && !isNaN(parseInt(sync.hp))) applyHp(parseInt(sync.hp) - (parseInt($("currentHp").value) || 0));
         if (sync.addItem) [].concat(sync.addItem).forEach(x => append("charInventory", x, "ได้รับไอเทม"));
         if (sync.addParty) [].concat(sync.addParty).forEach(x => append("charParty", x, "สหายใหม่"));
@@ -717,14 +727,14 @@ async function sendDirectAction(text, asSystem = false) {
     }
     chatHistory.push({ role: "model", parts: [{ text: reply }] });
     appendMessage("Dungeon Master", reply, "dm");
-    if (rollReq && parseInt(rollReq.dc) && !downed) { setPending(parseInt(rollReq.dc), rollReq.skill || ""); openDiceUI(); }
+    if (rollReq && parseInt(rollReq.dc)) MP.onRoll(rollReq);
     if (sceneReq) setScene(sceneReq, true);
     if (mm) applyMood(mm[1].toLowerCase());
     if (logObj && typeof logObj === "object") applyLog(logObj);
     if (cmbObj && typeof cmbObj === "object") handleCombatTag(cmbObj);
   } catch (err) {
     console.error(err);
-    chatHistory.pop(); // แก้ข้อ 4: ถอนข้อความ user ที่ยังไม่ได้คำตอบ
+    chatHistory.pop();
     appendMessage("System Alert", "เกิดข้อผิดพลาด: " + err.message, "system");
   } finally {
     sendBtn.disabled = false; sendBtn.classList.remove("opacity-50");
@@ -744,7 +754,7 @@ function appendMessage(sender, text, type, persist = true) {
     div.innerHTML = `<p class="font-bold text-amber-400 text-[10px] mb-0.5 text-right">${safeSender}</p><div class="text-slate-100 whitespace-pre-wrap">${safe}</div>`;
   } else if (type === "dm") {
     div.className = "bg-slate-900 border-l-4 border-amber-500 p-3 sm:p-4 rounded-r-lg max-w-[95%] shadow text-xs";
-    if (persist && !downed) { // DM สั่งทอยโดยตรง (ไม่มีชอยส์) -> ตั้ง DC อัตโนมัติ
+    if (persist && !downed) {
       const dcm = text.match(/DC\s*(\d+)/i);
       if (/\[ชอยส์\s*\d+\]/.test(text)) { pendingRoll = null; updateBanner(); }
       else if (dcm && /ทอย/.test(text)) { setPending(parseInt(dcm[1]), ""); openDiceUI(); }
@@ -765,7 +775,6 @@ function appendMessage(sender, text, type, persist = true) {
   if (persist) { msgLog.push({ sender, text, type }); saveStory(); }
 }
 
-// ---------- บันทึก/กู้คืนเนื้อเรื่อง ----------
 const MAX_LOG = 200;
 let msgLog = [];
 function saveStory() {
@@ -787,7 +796,7 @@ function loadStory() {
   } catch (e) { console.warn("Story load failed", e); }
 }
 
-// ---------- ฉาก: ธีมสี (ฐาน) + ภาพอนิเมะจาก AI (เสริม) ----------
+// ---------- Themes & Scene ----------
 const THEMES = {
   forest: "linear-gradient(160deg,#052e1c,#14532d 55%,#1e3a2a)",
   cave: "linear-gradient(160deg,#0b0b14,#1c1830 60%,#2b1d3a)",
@@ -855,7 +864,7 @@ async function setScene(sc, generate = true) {
   if (data && my === sceneToken) { img.onload = () => { img.style.opacity = 1; }; img.src = data; }
 }
 
-// ---------- HP / ไอเทม / Death Save ----------
+// ---------- HP & Combat State ----------
 function saveState() { try { localStorage.setItem("DND_STATE_V1", JSON.stringify({ downed, dead, ds })); } catch (e) {} }
 function loadState() { try { const o = JSON.parse(localStorage.getItem("DND_STATE_V1") || "null"); if (o) { downed = !!o.downed; dead = !!o.dead; ds = o.ds || ds; } } catch (e) {} }
 function canAct() {
@@ -874,7 +883,7 @@ function updateVitals() {
   $("condBadges").innerHTML = rules.conds.map(c => `<span class="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-950/60 border border-rose-500/40 text-rose-300">${escapeHtml(c)}</span>`).join("");
 }
 function applyHp(delta) {
-  const cur = parseInt($("currentHp").value) || 0, max = parseInt($("maxHp").value) || 12;
+  const cur = parseInt($("currentHp").value) || 0, max = parseInt($("maxHp").value) || 10;
   const next = Math.max(0, Math.min(max, cur + delta));
   if (next === cur) return;
   $("currentHp").value = next; saveSheet();
@@ -923,7 +932,7 @@ document.addEventListener("click", e => {
   actionAndTurn(`ฉันใช้ไอเทม: ${b.dataset.use}`);
 });
 
-// ---------- รูปหน้า + สีหน้า ----------
+// ---------- Moods & Portraits ----------
 const MOODS = {
   neutral: ["ปกติ", "calm neutral"], happy: ["ยิ้ม", "smiling happily"], smug: ["ภูมิใจ", "proud confident smirk"],
   angry: ["โกรธ", "angry glare"], sad: ["เศร้า", "sad, teary eyes"], surprised: ["ตกใจ", "shocked, wide eyes"],
@@ -958,7 +967,7 @@ async function callImage(parts) {
 }
 function portraitImage(mood, ref) {
   const g = id => $(id).value.trim();
-  const base = `Japanese anime character portrait, bust-up, facing the viewer, soft lighting, simple soft background, no text, no watermark. Character: ${g("charName")}, ${g("charClass")}. Appearance: ${g("charLook") || "not specified, design to fit the class"}. Personality: ${g("charPersonality").slice(0, 200)}.`;
+  const base = `Japanese anime character portrait, bust-up, facing the viewer, soft lighting, simple soft background, no text, no watermark. Character: ${g("charName") || "Hero"}, ${g("charClass") || "Adventurer"}. Appearance: ${g("charLook") || "fantasy adventurer"}. Personality: ${g("charPersonality").slice(0, 200) || "determined"}.`;
   const parts = ref
     ? [{ inlineData: { mimeType: "image/jpeg", data: ref.split(",")[1] } }, { text: `${base} Use the attached image as reference: keep the exact same character design, face, hairstyle, outfit and art style. Change only the facial expression to: ${MOODS[mood][1]}.` }]
     : [{ text: `${base} Facial expression: ${MOODS[mood][1]}.` }];
@@ -1011,7 +1020,7 @@ $("portraitFile").addEventListener("change", e => {
   rd.readAsDataURL(f);
 });
 
-// ---------- สมุดบันทึกแคมเปญ (ความจำระยะยาวของ DM) ----------
+// ---------- Journal ----------
 let journal = { summary: "", events: [], quests: [], npcs: {} };
 function saveJournal() { try { localStorage.setItem("DND_JOURNAL_V1", JSON.stringify(journal)); } catch (e) {} }
 function loadJournal() {
@@ -1085,7 +1094,7 @@ document.addEventListener("click", e => {
   if (d) { delete journal.npcs[d.dataset.npcdel]; saveJournal(); renderJournal(); }
 });
 
-// ================= กฎ DnD: ค่าพลัง ทักษะ ทรัพยากร สภาวะ เวลา XP =================
+// ---------- DnD 5e Rules & Stat System ----------
 const ABIL = ["str", "dex", "con", "int", "wis", "cha"];
 const ABIL_FULL = { strength: "str", dexterity: "dex", constitution: "con", intelligence: "int", wisdom: "wis", charisma: "cha" };
 const SKILLS = { Acrobatics: "dex", "Animal Handling": "wis", Arcana: "int", Athletics: "str", Deception: "cha", History: "int", Insight: "wis", Intimidation: "cha", Investigation: "int", Medicine: "wis", Nature: "int", Perception: "wis", Performance: "cha", Persuasion: "cha", Religion: "int", "Sleight of Hand": "dex", Stealth: "dex", Survival: "wis" };
@@ -1151,7 +1160,6 @@ function resolveCheck(label) {
   return { kind, name, mod: mod + condPen(), dis: condDis(kind) };
 }
 
-// ---------- เวลา เสบียง สภาวะ XP ----------
 function updateClock() { const c = $("clockLabel"); if (c) c.textContent = `🕒 วันที่ ${rules.time.day} ${String(rules.time.hour).padStart(2, "0")}:00 · 🍖${rules.sup.rations} 🔦${rules.sup.torches}`; }
 function addCond(n) {
   n = String(n).trim().slice(0, 20); if (!n) return;
@@ -1186,7 +1194,7 @@ function levelUp() {
   refreshFeatures(false);
   $("charClass").value = $("charClass").value.replace(/Lv\.?\s*\d+/i, `Lv. ${rules.level}`);
   saveSheet();
-  appendMessage("System", `🎉 เลเวลอัป! เลเวล ${rules.level} · HP สูงสุด +${gain} · Prof ${sgn(profBonus())}${rules.level % 4 === 0 ? " · ได้แต้มค่าพลัง +2 (กด +1 ในแท็บสเตตัส)" : ""}`, "system");
+  appendMessage("System", `🎉 เลเวลอัป! เลเวล ${rules.level} · HP สูงสุด +${gain} · Prof ${sgn(profBonus())}`, "system");
   applyMood("happy"); sfx("crit");
 }
 function spendResource(name, amt) {
@@ -1225,11 +1233,10 @@ function rulesForPrompt() {
   return t;
 }
 
-// ---------- พัก (Hit Dice) ----------
 window.takeShortRest = () => {
   if (!canAct()) return;
   const raw = prompt(`Short Rest: ใช้ Hit Die (d${rules.hd.die}) กี่ลูก? (เหลือ ${rules.hd.cur}/${rules.hd.max})`, "1"); if (raw === null) return;
-  const max = parseInt($("maxHp").value) || 12, cur = parseInt($("currentHp").value) || 0;
+  const max = parseInt($("maxHp").value) || 10, cur = parseInt($("currentHp").value) || 0;
   const n = Math.max(0, Math.min(parseInt(raw) || 0, rules.hd.cur)); let healed = 0;
   for (let i = 0; i < n; i++) healed += Math.max(1, Math.floor(Math.random() * rules.hd.die) + 1 + abilMod("con"));
   const next = Math.min(max, cur + healed);
@@ -1237,24 +1244,24 @@ window.takeShortRest = () => {
   rules.res.forEach(r => { if (r.rest === "short") r.cur = r.max; });
   advanceTime(1); saveSheet(); saveRules(); renderRules();
   if (next > 0 && downed) { downed = false; ds = { s: 0, f: 0 }; saveState(); updateVitals(); }
-  appendMessage("System", `Short Rest: ใช้ Hit Die ${n} ลูก ฟื้น HP +${next - cur} (${next}/${max}) · ฟื้นความสามารถแบบ Short Rest`, "system");
+  appendMessage("System", `Short Rest: ใช้ Hit Die ${n} ลูก ฟื้น HP +${next - cur} (${next}/${max})`, "system");
   switchMobileTab("story");
   sendDirectAction(`ฉันพักผ่อนระยะสั้น (HP ${next}/${max})`);
 };
 window.takeLongRest = () => {
   if (dead) { canAct(); return; }
-  const max = parseInt($("maxHp").value) || 12;
+  const max = parseInt($("maxHp").value) || 10;
   $("currentHp").value = max; $("charPride").value = PRIDE_MAX;
   rules.hd.cur = Math.min(rules.hd.max, rules.hd.cur + Math.max(1, Math.floor(rules.hd.max / 2)));
   rules.res.forEach(r => { r.cur = r.max; }); rules.slots.forEach(s => { s.cur = s.max; });
   removeCond("Exhausted"); downed = false; ds = { s: 0, f: 0 };
   advanceTime(8); saveSheet(); saveState(); saveRules(); renderRules(); updateVitals();
-  appendMessage("System", `Long Rest: HP เต็ม (${max}/${max}) ฟื้นทรัพยากร ช่องคาถา และ Hit Die ครึ่งหนึ่ง`, "system");
+  appendMessage("System", `Long Rest: HP เต็ม (${max}/${max}) ฟื้นทรัพยากร ช่องคาถา และ Hit Die`, "system");
   switchMobileTab("story");
   sendDirectAction("ฉันตั้งแคมป์และนอนพักผ่อนยาวจนถึงรุ่งสาง (Long Rest)");
 };
 
-// ---------- เสียง ----------
+// ---------- Audio ----------
 let audioCtx = null, soundOn = localStorage.getItem("SOLO_DND_SOUND") !== "0", musicOn = localStorage.getItem("SOLO_DND_MUSIC") === "1", amb = null;
 function ac() { try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch (e) {} return audioCtx; }
 function tone(f, d, type, vol, when, slide) {
@@ -1295,7 +1302,7 @@ document.addEventListener("click", () => {
   if (musicOn && !amb) ambience(currentScene ? currentScene.type : "mist");
 });
 
-// ---------- ระบบต่อสู้ ----------
+// ---------- Combat System ----------
 function saveCombat() { try { localStorage.setItem("DND_COMBAT_V1", JSON.stringify(combat)); } catch (e) {} }
 function rollDice(expr, crit) {
   const m = String(expr).replace(/\s/g, "").match(/^(\d*)d(\d+)([+-]\d+)?$/i);
@@ -1363,7 +1370,7 @@ async function enemyAct(c) {
   const crit = res.chosen === 20, hit = res.chosen !== 1 && (crit || res.total >= pcAc);
   if (hit) {
     const d = rollDice(c.dmg, crit); applyHp(-Math.max(1, d.total));
-    combat.log.push(`${c.name} โจมตีโดน${crit ? " (คริติคอล)" : ""} (ทอย ${res.total} เทียบ AC ${pcAc}) ดาเมจ ${Math.max(1, d.total)} → HP ผู้เล่น ${$("currentHp").value}/${$("maxHp").value}`);
+    combat.log.push(`${c.name} โจมตีโดน${crit ? " (คริติคอล)" : ""} (ทอย ${res.total} เทียบ AC ${pcAc}) ดาเมจ ${Math.max(1, d.total)}`);
   } else combat.log.push(`${c.name} โจมตีพลาด (ทอย ${res.total} เทียบ AC ${pcAc})`);
 }
 async function playerAttack() {
@@ -1380,14 +1387,14 @@ async function playerAttack() {
     let dmg = Math.max(1, rollDice(w.dice, crit).total + am), extra = "";
     if (combat.smite) { const s = spendSlot(1); if (s) { const sm = rollDice(`${1 + s.lvl}d8`, crit); dmg += sm.total; extra = ` (รวม Divine Smite ${sm.total})`; combat.smite = false; } }
     t.hp -= dmg;
-    combat.log.push(`ผู้เล่นโจมตี ${t.name} โดน${crit ? " (คริติคอล)" : ""} (ทอย ${res.total} เทียบ AC ${t.ac}) ด้วย ${w.name} ดาเมจ ${dmg}${extra} → ${t.name} HP ${Math.max(0, t.hp)}/${t.maxHp}`);
+    combat.log.push(`ผู้เล่นโจมตี ${t.name} โดน${crit ? " (คริติคอล)" : ""} (ทอย ${res.total} เทียบ AC ${t.ac}) ดาเมจ ${dmg}${extra}`);
     if (t.hp <= 0) { t.dead = true; combat.log.push(`${t.name} ถูกสังหาร`); }
   } else combat.log.push(`ผู้เล่นโจมตี ${t.name} พลาด (ทอย ${res.total} เทียบ AC ${t.ac})`);
   await endPlayerTurn(true);
 }
 async function endPlayerTurn(acted) {
   if (!combat) return;
-  if (!acted) combat.log.push("ผู้เล่นตั้งรับ ไม่ทำอะไรเพิ่ม");
+  if (!acted) combat.log.push("ผู้เล่นตั้งรับ");
   combat.busy = true;
   if (!combat.order.some(c => c.type === "enemy" && !c.dead)) { await endCombat(true); return; }
   stepIdx(); await advanceTurn();
@@ -1403,7 +1410,7 @@ async function endCombat(victory) {
 }
 async function flushCombat(final) {
   if (!combat || !combat.log.length) return;
-  const txt = `[ระบบต่อสู้ รอบ ${combat.round}${final ? " จบการต่อสู้" : ""}] ${combat.log.join(" ; ")}. ${final ? "บรรยายฉากจบการต่อสู้ ห้ามเริ่มการต่อสู้ใหม่" : "บรรยายผลตามนี้สั้นๆ เท่านั้น แล้วถามว่าผู้เล่นจะทำอะไรต่อ"}`;
+  const txt = `[ระบบต่อสู้ รอบ ${combat.round}${final ? " จบการต่อสู้" : ""}] ${combat.log.join(" ; ")}. บรรยายเหตุการณ์นี้สั้นๆ แล้วถามว่าผู้เล่นจะทำอะไรต่อ`;
   combat.log = [];
   await sendDirectAction(txt, true);
 }
@@ -1412,7 +1419,7 @@ function handleCombatTag(o) {
   if (o.start && Array.isArray(o.enemies) && !combat) startCombat(o.enemies);
 }
 async function actionAndTurn(text) {
-  const was = combat; // ถ้าการต่อสู้เพิ่งเริ่มจากข้อความนี้ ยังไม่นับเป็นการกระทำในเทิร์น
+  const was = combat;
   await sendDirectAction(text);
   if (was && combat === was && !combat.busy && combat.order[combat.idx].type === "pc" && !pendingRoll && !downed && !dead) await endPlayerTurn(true);
 }
@@ -1426,7 +1433,7 @@ function renderCombat() {
   const canSmite = /paladin/i.test(rules.cls) && rules.slots.some(s => s.cur > 0);
   bar.innerHTML = `<div class="flex items-center gap-2 mb-1.5"><b class="text-[11px] text-rose-300 flex-shrink-0">⚔️ รอบ ${combat.round}</b><div class="flex gap-1 overflow-x-auto chat-scroll">${chips}</div></div>
     <div class="flex gap-2 overflow-x-auto chat-scroll mb-1.5">${foes}</div>
-    <div class="flex gap-2 items-center flex-wrap"><button data-cact="attack" ${dis} class="bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white font-bold px-3 py-1.5 rounded-lg text-xs">⚔️ โจมตี</button><button data-cact="end" ${dis} class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 border border-slate-700 px-3 py-1.5 rounded-lg text-xs">⏭ จบเทิร์น</button>${canSmite ? `<label class="flex items-center gap-1 text-[11px] text-amber-300 cursor-pointer"><input type="checkbox" id="smiteChk" class="accent-amber-500" ${combat.smite ? "checked" : ""}> Divine Smite</label>` : ""}<span class="text-[11px] text-slate-400">เทิร์น: ${e(cur.name)}${mine ? " (คุณ) · หรือพิมพ์การกระทำอื่นด้านล่าง" : ""}</span></div>`;
+    <div class="flex gap-2 items-center flex-wrap"><button data-cact="attack" ${dis} class="bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white font-bold px-3 py-1.5 rounded-lg text-xs">⚔️ โจมตี</button><button data-cact="end" ${dis} class="bg-slate-800 hover:bg-slate-700 disabled:opacity-40 border border-slate-700 px-3 py-1.5 rounded-lg text-xs">⏭ จบเทิร์น</button>${canSmite ? `<label class="flex items-center gap-1 text-[11px] text-amber-300 cursor-pointer"><input type="checkbox" id="smiteChk" class="accent-amber-500" ${combat.smite ? "checked" : ""}> Divine Smite</label>` : ""}<span class="text-[11px] text-slate-400">เทิร์น: ${e(cur.name)}</span></div>`;
 }
 function loadCombat() {
   try {
@@ -1441,39 +1448,26 @@ document.addEventListener("click", ev => {
 });
 document.addEventListener("change", ev => { if (ev.target.id === "smiteChk" && combat) combat.smite = ev.target.checked; });
 
-// ---------- แท็บสเตตัส ----------
+// ---------- Rules Tab UI ----------
 function renderRules() {
   const box = $("rulesBox"); if (!box) return;
   const e = escapeHtml, nx = XP_T[rules.level], pv = XP_T[rules.level - 1] || 0, pct = nx ? Math.min(100, Math.max(0, (rules.xp - pv) / (nx - pv) * 100)) : 100;
   const card = (t, inner) => `<div class="bg-slate-800/40 rounded-xl p-2.5 border border-slate-800"><div class="text-xs text-amber-300 font-semibold mb-1.5">${t}</div>${inner}</div>`;
   const inp = "editable text-center text-xs text-slate-100", btn = "px-1.5 py-0.5 bg-slate-800 hover:bg-amber-500/20 border border-slate-700 rounded text-[11px]";
   const none = t => `<span class="text-[11px] text-slate-500">${t}</span>`;
-  const head = card("⭐ เลเวล & XP", `<div class="flex items-center gap-2 text-xs"><span>เลเวล</span><input data-lvl type="number" min="1" max="10" value="${rules.level}" class="${inp} w-10"><span class="text-slate-400">XP ${rules.xp}${nx ? "/" + nx : " (สูงสุด)"}</span><span class="text-slate-500">· Prof ${sgn(profBonus())}</span></div><div class="h-1.5 bg-slate-950 rounded mt-1.5 overflow-hidden"><div class="h-full bg-amber-500" style="width:${pct}%"></div></div><div class="flex gap-1.5 mt-2"><select data-cls class="flex-1 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs">${Object.keys(CLASS_P).map(k => `<option ${k === rules.cls ? "selected" : ""}>${k}</option>`).join("")}</select><button data-applycls class="${btn}">ตั้งตามคลาส</button></div><div class="text-[10px] text-slate-500 mt-1">รีเซ็ต Hit Die, Save ที่ชำนาญ, ทรัพยากรและช่องคาถาตามคลาสและเลเวล</div>${rules.asi > 0 ? `<div class="text-[11px] text-emerald-400 mt-1">มีแต้มเพิ่มค่าพลังเหลือ ${rules.asi} (กด +1 ที่ค่าพลังด้านล่าง)</div>` : ""}`);
-  const abil = card("💪 ค่าพลัง & Saving Throw", `<div class="grid grid-cols-3 gap-1.5">${ABIL.map(a => `<div class="bg-slate-950/70 border border-slate-800 rounded p-1 text-center"><div class="text-[10px] text-slate-400 font-semibold uppercase">${a}</div><input data-ab="${a}" type="number" value="${rules.abil[a]}" class="${inp} w-full"><div class="text-xs font-bold text-amber-300">${sgn(abilMod(a))}</div><label class="text-[9px] text-slate-500 cursor-pointer"><input type="checkbox" data-sv="${a}" ${rules.saves.includes(a) ? "checked" : ""} class="accent-amber-500"> Save ${sgn(saveMod(a))}</label>${rules.asi > 0 ? `<button data-asi="${a}" class="block mx-auto text-[10px] text-emerald-400">+1</button>` : ""}</div>`).join("")}</div>`);
+  const head = card("⭐ เลเวล & XP", `<div class="flex items-center gap-2 text-xs"><span>เลเวล</span><input data-lvl type="number" min="1" max="10" value="${rules.level}" class="${inp} w-10"><span class="text-slate-400">XP ${rules.xp}${nx ? "/" + nx : " (สูงสุด)"}</span><span class="text-slate-500">· Prof ${sgn(profBonus())}</span></div><div class="h-1.5 bg-slate-950 rounded mt-1.5 overflow-hidden"><div class="h-full bg-amber-500" style="width:${pct}%"></div></div><div class="flex gap-1.5 mt-2"><select data-cls class="flex-1 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs"><option value="">เลือกคลาส...</option>${Object.keys(CLASS_P).map(k => `<option ${k === rules.cls ? "selected" : ""}>${k}</option>`).join("")}</select><button data-applycls class="${btn}">ตั้งค่าตามคลาส</button></div>`);
+  const abil = card("💪 ค่าพลัง & Saving Throw", `<div class="grid grid-cols-3 gap-1.5">${ABIL.map(a => `<div class="bg-slate-950/70 border border-slate-800 rounded p-1 text-center"><div class="text-[10px] text-slate-400 font-semibold uppercase">${a}</div><input data-ab="${a}" type="number" value="${rules.abil[a]}" class="${inp} w-full"><div class="text-xs font-bold text-amber-300">${sgn(abilMod(a))}</div><label class="text-[9px] text-slate-500 cursor-pointer"><input type="checkbox" data-sv="${a}" ${rules.saves.includes(a) ? "checked" : ""} class="accent-amber-500"> Save ${sgn(saveMod(a))}</label></div>`).join("")}</div>`);
   const skills = card("🎯 ทักษะ (ติ๊ก = ชำนาญ)", `<div class="grid grid-cols-2 gap-x-3 gap-y-1">${Object.keys(SKILLS).map(k => `<label class="flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer"><input type="checkbox" data-sk="${k}" ${rules.skills.includes(k) ? "checked" : ""} class="accent-amber-500"><span class="flex-1 truncate">${k}</span><span class="text-amber-300">${sgn(skillMod(k))}</span></label>`).join("")}</div>`);
-  const wp = card("⚔️ อาวุธหลัก", `<div class="flex gap-1.5"><input data-wp="name" value="${e(rules.weapon.name)}" class="flex-1 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs min-w-0"><input data-wp="dice" value="${e(rules.weapon.dice)}" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center"><select data-wp="ability" class="bg-slate-950 border border-slate-700 rounded px-1 py-1 text-xs">${["auto", ...ABIL].map(a => `<option ${a === rules.weapon.ability ? "selected" : ""}>${a}</option>`).join("")}</select></div><div class="text-[10px] text-slate-500 mt-1">โจมตี ${sgn(abilMod(weaponAbil()) + profBonus())} · ดาเมจ ${e(rules.weapon.dice)}${sgn(abilMod(weaponAbil()))}</div>`);
-  const res = rules.res.map((r, i) => `<div class="flex items-center gap-1.5 text-xs"><span class="flex-1 truncate">${e(r.name)}</span><span class="text-amber-300">${r.cur}/${r.max}</span><span class="text-[9px] text-slate-500">${r.rest === "short" ? "S" : "L"}</span><button data-useres="${i}" class="${btn}">ใช้</button>${r.custom ? `<button data-delres="${i}" class="text-slate-600 hover:text-rose-400">×</button>` : ""}</div>`).join("") || none("ไม่มี (กด ตั้งตามคลาส หรือเพิ่มเอง)");
+  const wp = card("⚔️ อาวุธหลัก", `<div class="flex gap-1.5"><input data-wp="name" value="${e(rules.weapon.name)}" placeholder="ชื่ออาวุธ" class="flex-1 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs min-w-0"><input data-wp="dice" value="${e(rules.weapon.dice)}" placeholder="1d8" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs text-center"><select data-wp="ability" class="bg-slate-950 border border-slate-700 rounded px-1 py-1 text-xs">${["auto", ...ABIL].map(a => `<option ${a === rules.weapon.ability ? "selected" : ""}>${a}</option>`).join("")}</select></div>`);
+  const res = rules.res.map((r, i) => `<div class="flex items-center gap-1.5 text-xs"><span class="flex-1 truncate">${e(r.name)}</span><span class="text-amber-300">${r.cur}/${r.max}</span><button data-useres="${i}" class="${btn}">ใช้</button></div>`).join("") || none("ไม่มี");
   const slots = rules.slots.map((s, i) => `<div class="flex items-center gap-1.5 text-xs"><span>ช่องคาถา Lv${s.lvl}</span><span class="flex-1 text-amber-300 tracking-widest">${"●".repeat(s.cur)}${"○".repeat(s.max - s.cur)}</span><button data-useslot="${i}" class="${btn}">ใช้</button></div>`).join("");
-  const rs = card("🔋 ทรัพยากร & Hit Dice", `<div class="text-xs mb-1.5">Hit Dice <span class="text-amber-300">${rules.hd.cur}/${rules.hd.max}</span> (d${rules.hd.die}) <span class="text-[10px] text-slate-500">ใช้ตอน Short Rest</span></div><div class="flex flex-col gap-1">${res}${slots}</div><button data-addres class="${btn} mt-1.5">+ เพิ่มทรัพยากร</button>`);
+  const rs = card("🔋 ทรัพยากร & Hit Dice", `<div class="text-xs mb-1.5">Hit Dice <span class="text-amber-300">${rules.hd.cur}/${rules.hd.max}</span> (d${rules.hd.die})</div><div class="flex flex-col gap-1">${res}${slots}</div>`);
   const cd = card("⚠️ สภาวะ", `<div class="flex flex-wrap gap-1.5 mb-1.5">${rules.conds.map(c => `<button data-rmcond="${e(c)}" class="px-2 py-0.5 rounded-full text-[11px] bg-rose-950/60 border border-rose-500/40 text-rose-300">${e(c)} ×</button>`).join("") || none("ไม่มี")}</div><select data-addcond class="bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-xs"><option value="">+ เพิ่มสภาวะ</option>${Object.keys(CONDS).map(k => `<option>${k}</option>`).join("")}</select>`);
   const tm = card("🕒 เวลา & เสบียง", `<div class="flex items-center gap-2 text-xs"><span>วันที่ ${rules.time.day} · ${String(rules.time.hour).padStart(2, "0")}:00</span><button data-hours="1" class="${btn}">+1 ชม.</button><button data-hours="8" class="${btn}">+8 ชม.</button></div><div class="flex gap-3 mt-1.5 text-xs">${["rations", "torches"].map(k => `<label class="flex items-center gap-1">${k === "rations" ? "🍖 เสบียง" : "🔦 คบเพลิง"}<input data-sup="${k}" type="number" min="0" value="${rules.sup[k]}" class="${inp} w-10"></label>`).join("")}</div>`);
   box.innerHTML = head + abil + skills + wp + rs + cd + tm;
   updateClock();
 }
-function useResourceUI(i) {
-  if (!canAct()) return; const r = rules.res[i]; if (!r) return;
-  const raw = prompt(`ใช้ ${r.name} กี่แต้ม? (เหลือ ${r.cur}/${r.max})`, "1"); if (raw === null) return;
-  const n = Math.max(1, parseInt(raw) || 1); if (!spendResource(r.name, n)) return;
-  if (window.innerWidth < 768) switchMobileTab("story");
-  actionAndTurn(`ฉันใช้ ${r.name} ${n} แต้ม (เหลือ ${r.cur}/${r.max})`);
-}
-function useSlotUI(i) {
-  if (!canAct()) return; const s = rules.slots[i]; if (!s || s.cur <= 0) { alert("ช่องคาถาระดับนี้หมดแล้ว"); return; }
-  const sp = prompt("ร่ายคาถาหรือใช้ความสามารถอะไร? (เว้นว่างได้)", ""); if (sp === null) return;
-  spendSlot(s.lvl);
-  if (window.innerWidth < 768) switchMobileTab("story");
-  actionAndTurn(`ฉันใช้ช่องคาถาเลเวล ${s.lvl}${sp ? " ร่าย " + sp : ""} (เหลือ ${s.cur}/${s.max})`);
-}
+
 $("rulesBox").addEventListener("change", ev => {
   const t = ev.target, d = t.dataset;
   if (d.ab) rules.abil[d.ab] = Math.max(1, Math.min(30, parseInt(t.value) || 10));
@@ -1483,20 +1477,15 @@ $("rulesBox").addEventListener("change", ev => {
   else if (d.sup) rules.sup[d.sup] = Math.max(0, parseInt(t.value) || 0);
   else if (d.wp) rules.weapon[d.wp] = t.value.trim() || rules.weapon[d.wp];
   else if (d.addcond !== undefined) { if (t.value) addCond(t.value); }
-  else if (d.cls !== undefined) return;
   saveRules(); renderRules(); updateVitals();
 });
 $("rulesBox").addEventListener("click", ev => {
   const b = ev.target.closest("button"); if (!b) return; const d = b.dataset;
-  if (d.asi) { if (rules.asi > 0 && rules.abil[d.asi] < 20) { rules.abil[d.asi]++; rules.asi--; } }
-  else if (d.applycls !== undefined) refreshFeatures(true, $("rulesBox").querySelector("[data-cls]").value);
-  else if (d.useres !== undefined) { useResourceUI(+d.useres); return; }
-  else if (d.useslot !== undefined) { useSlotUI(+d.useslot); return; }
-  else if (d.delres !== undefined) rules.res.splice(+d.delres, 1);
-  else if (d.addres !== undefined) { const n = prompt("ชื่อทรัพยากร"); if (!n) return; const m = parseInt(prompt("จำนวนสูงสุด", "3")) || 1; rules.res.push({ name: n.slice(0, 30), max: m, cur: m, rest: confirm("ฟื้นเมื่อ Short Rest? (ตกลง = Short, ยกเลิก = Long)") ? "short" : "long", custom: true }); }
+  if (d.applycls !== undefined) refreshFeatures(true, $("rulesBox").querySelector("[data-cls]").value);
+  else if (d.useres !== undefined) spendResource(rules.res[+d.useres].name, 1);
+  else if (d.useslot !== undefined) spendSlot(rules.slots[+d.useslot].lvl);
   else if (d.rmcond) removeCond(d.rmcond);
   else if (d.hours) advanceTime(+d.hours);
-  else return;
   saveRules(); renderRules(); updateVitals();
 });
 
@@ -1508,14 +1497,257 @@ loadStory();
 renderChips(); applyMood("neutral"); updateVitals();
 loadJournal(); renderJournal();
 renderRules(); updateClock(); loadCombat();
-if (msgLog.length && (journal.summary || journal.events.length || journal.quests.some(q => !q.done))) {
-  const act = journal.quests.filter(q => !q.done).map(q => q.text);
-  appendMessage("System", "📖 ตอนก่อนหน้า: " + [journal.summary, ...journal.events.slice(-3)].filter(Boolean).join(" · ") + (act.length ? " | เควสต์ค้าง: " + act.join(", ") : ""), "system", false);
-}
 try {
   const sc = JSON.parse(localStorage.getItem("DND_SCENE_V1") || "null");
   if (sc) setScene(sc, false); else applyTheme("mist");
 } catch (e) { applyTheme("mist"); }
+</script>
+<script>
+const MP = {
+  on: false, host: false, peer: null, hc: null, conns: {}, roster: {}, q: Promise.resolve(),
+  snap() { return { name: $("charName").value || "ผู้เล่น", cls: $("charClass").value, hp: +$("currentHp").value || 0, max: +$("maxHp").value || 1, ac: +$("charAc").value || 10, ab: ABIL.map(a => a.toUpperCase() + " " + rules.abil[a]).join(" "), conds: rules.conds.slice() }; },
+  send(c, m) { try { if (c && c.open) c.send(m); } catch (e) {} },
+  bc(m) { Object.values(MP.conns).forEach(c => MP.send(c, m)); },
+  sync() {
+    if (!MP.on) return;
+    if (MP.host) { MP.roster.host = MP.snap(); MP.bc({ t: "roster", r: MP.roster }); MP.drawRoster(); }
+    else MP.send(MP.hc, { t: "snap", s: MP.snap() });
+  },
+  find(name) {
+    const n = String(name || "").toLowerCase().trim(); if (!n) return null;
+    return Object.keys(MP.roster).find(k => MP.roster[k].name.toLowerCase() === n) || Object.keys(MP.roster).find(k => MP.roster[k].name.toLowerCase().includes(n) || n.includes(MP.roster[k].name.toLowerCase()));
+  },
+  prompt() {
+    const list = Object.values(MP.roster).map(p => `- ${p.name} (${p.cls}) HP ${p.hp}/${p.max} AC ${p.ac} | ${p.ab} | สภาวะ: ${p.conds.join(",") || "ไม่มี"}`).join("\n");
+    return `\n[โหมดมัลติเพลเยอร์ ${Object.keys(MP.roster).length} คน - กฎนี้ทับกฎข้อ 2,5 ที่พูดถึงตัวละครเดียว]\nสมาชิกปาร์ตี้:\n${list}\n- ข้อความผู้เล่นขึ้นต้นด้วยชื่อตัวละครที่กระทำ\n- กระจายบทบาทและเปิดโอกาสให้ทุกคนมีส่วนร่วม ถามคนที่เงียบอยู่ตรงๆ และให้แต่ละฉากมีจุดเด่นของคลาสต่างกัน\n- ทุกแท็ก ROLL และ STATUS_SYNC ต้องมี "target" เป็นชื่อตัวละครเสมอ เช่น <<<ROLL: {"target":"ชื่อตัวละคร","dc":14,"skill":"Athletics","why":"เหตุผล"}>>> และ <<<STATUS_SYNC: {"target":"ชื่อตัวละคร","hpDelta":-4}>>>\n- สั่งทอยทีละคนต่อหนึ่งแท็ก`;
+  },
+  onRoll(r) {
+    const id = MP.on ? MP.find(r.target) : null;
+    if (id && id !== "host" && MP.conns[id]) { MP.send(MP.conns[id], { t: "roll", dc: r.dc, skill: r.skill || "", why: r.why || "" }); appendMessage("System", `🎯 DM สั่ง ${MP.roster[id].name} ทอย ${r.skill || ""}`, "system"); }
+    else if (!downed) { setPending(parseInt(r.dc), r.skill || ""); openDiceUI(); }
+  },
+  hp(sync, d) {
+    const id = MP.on ? MP.find(sync.target) : null;
+    if (id && id !== "host" && MP.conns[id]) { MP.send(MP.conns[id], { t: "hp", d }); const p = MP.roster[id]; p.hp = Math.max(0, Math.min(p.max, p.hp + d)); appendMessage("System", `${p.name} HP ${d > 0 ? "+" : ""}${d}`, "system"); MP.sync(); }
+    else applyHp(d);
+  },
+  drawRoster() {
+    const bar = $("rosterBar"); if (!bar) return;
+    bar.innerHTML = Object.values(MP.roster).map(p => { const pc = Math.max(0, Math.min(100, p.hp / p.max * 100)); return `<div class="flex-shrink-0 w-40 bg-slate-900/90 border border-slate-700 rounded-lg p-1.5 text-[10px]"><div class="text-amber-300 font-semibold truncate">${escapeHtml(p.name)}</div><div class="text-slate-400 truncate">${escapeHtml(p.cls)}</div><div class="h-1.5 bg-slate-800 rounded mt-1 overflow-hidden"><div class="h-full ${pc > 50 ? "bg-emerald-500" : pc > 25 ? "bg-amber-500" : "bg-rose-500"}" style="width:${pc}%"></div></div><div class="text-slate-300 mt-0.5">HP ${p.hp}/${p.max} · AC ${p.ac}</div><div class="text-slate-500 truncate">${escapeHtml(p.ab)}</div><div class="text-rose-300 truncate">${escapeHtml(p.conds.join(", "))}</div></div>`; }).join("");
+  },
+  hostStart() {
+    if (!apiKey) { alert("Host ต้องใส่ Gemini API Key ก่อน"); toggleSettingsModal(); return; }
+    const code = Math.random().toString(36).slice(2, 7);
+    MP.peer = new Peer("solodnd-" + code);
+    MP.peer.on("open", () => { MP.on = true; MP.host = true; $("mpCode").textContent = code; $("mpInfo").classList.remove("hidden"); MP.sync(); });
+    MP.peer.on("error", e => alert("Peer error: " + e.type));
+    MP.peer.on("connection", c => {
+      c.on("open", () => {
+        if (Object.keys(MP.conns).length >= 5) { MP.send(c, { t: "full" }); setTimeout(() => c.close(), 300); return; }
+        MP.conns[c.peer] = c;
+        MP.send(c, { t: "init", msgs: msgLog.slice(-60), scene: currentScene, j: journal, r: MP.roster });
+      });
+      c.on("data", m => {
+        if (m.t === "snap") { MP.roster[c.peer] = m.s; MP.sync(); }
+        else if (m.t === "act") { const p = MP.roster[c.peer]; if (p) MP.q = MP.q.then(() => _sda(`🧑 ${p.name}: ${String(m.text).slice(0, 500)}`, true)); }
+        else if (m.t === "fx") appendMessage("System", String(m.x).slice(0, 200), "system");
+      });
+      c.on("close", () => { delete MP.conns[c.peer]; delete MP.roster[c.peer]; MP.sync(); });
+    });
+  },
+  join() {
+    const code = $("mpJoinCode").value.trim(); if (!code) return;
+    MP.peer = new Peer();
+    MP.peer.on("open", () => {
+      MP.hc = MP.peer.connect("solodnd-" + code, { reliable: true });
+      MP.hc.on("open", () => { MP.on = true; MP.host = false; MP.sync(); $("mpModal").classList.add("hidden"); $("mpBtn").textContent = "👥 ในห้อง"; });
+      MP.hc.on("data", MP.recv);
+      MP.hc.on("close", () => { MP.on = false; alert("Host ปิดห้องแล้ว"); });
+    });
+    MP.peer.on("error", e => alert("เชื่อมต่อไม่ได้: " + e.type));
+  },
+  recv(m) {
+    if (m.t === "init") { $("narrativeBox").innerHTML = ""; (m.msgs || []).forEach(x => _am(x.sender, x.text, x.type, false)); if (m.scene) setScene(m.scene, false); if (m.j) { journal = m.j; renderJournal(); } MP.roster = m.r || {}; MP.drawRoster(); }
+    else if (m.t === "msg") _am(m.s, m.x, m.ty, false);
+    else if (m.t === "scene") setScene(m.sc, false);
+    else if (m.t === "j") { journal = m.j; renderJournal(); }
+    else if (m.t === "roster") { MP.roster = m.r; MP.drawRoster(); }
+    else if (m.t === "roll") { setPending(parseInt(m.dc), m.skill); openDiceUI(); _am("System", `🎯 DM สั่งให้คุณทอย ${m.skill}`, "system", false); }
+    else if (m.t === "hp") applyHp(m.d);
+    else if (m.t === "full") alert("ห้องเต็มแล้ว (สูงสุด 6 คน)");
+  }
+};
+
+// ---- Hooks ----
+const _am = window.appendMessage, _sda = window.sendDirectAction, _uv = window.updateVitals, _sj = window.saveJournal, _ss = window.setScene, _fr = window.finishRoll, _bsi = window.buildSystemInstruction;
+window.appendMessage = function (s, t, ty, p = true) { _am(s, t, ty, p); if (MP.on && MP.host && p) MP.bc({ t: "msg", s, x: t, ty }); };
+window.sendDirectAction = function (t, sys) {
+  if (!MP.on) return _sda(t, sys);
+  if (!MP.host) { MP.send(MP.hc, { t: "act", text: t }); return Promise.resolve(); }
+  if (!sys) t = `[${MP.snap().name}] ` + t;
+  return MP.q = MP.q.then(() => _sda(t, sys));
+};
+window.updateVitals = function () { _uv(); MP.sync(); };
+window.saveJournal = function () { _sj(); if (MP.on && MP.host) MP.bc({ t: "j", j: journal }); };
+window.setScene = function (sc, g) { const r = _ss(sc, g); if (MP.on && MP.host) MP.bc({ t: "scene", sc }); return r; };
+window.buildSystemInstruction = () => _bsi() + (MP.on ? MP.prompt() : "");
+window.finishRoll = function () {
+  const r = lastRoll, drama = !!dramaResolver; _fr();
+  if (MP.on && r && !drama) { const x = `🎲 ${MP.snap().name} ทอย ${r.desc} ${sgn(r.mod)} = ${r.total}${r.verdict ? " · " + r.verdict.text : ""}`; if (MP.host) appendMessage("System", x, "system"); else MP.send(MP.hc, { t: "fx", x }); }
+};
+
+// ---- UI ----
+document.querySelector("header").insertAdjacentHTML("beforeend", `<button id="mpBtn" onclick="$('mpModal').classList.remove('hidden');$('mpModal').classList.add('flex')" class="bg-slate-800 px-3 py-1.5 rounded-lg text-xs border border-slate-700 ml-2">👥 ห้อง</button>`);
+$("narrativeBox").insertAdjacentHTML("beforebegin", `<div id="rosterBar" class="flex gap-2 overflow-x-auto px-4 pt-1 chat-scroll"></div>`);
+document.body.insertAdjacentHTML("beforeend", `<div id="mpModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50"><div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-3 text-xs"><div class="flex justify-between"><b class="text-amber-400">ห้องมัลติเพลเยอร์ (2–6 คน)</b><button onclick="$('mpModal').classList.add('hidden')" class="text-slate-400 text-lg">&times;</button></div><button onclick="MP.hostStart()" class="bg-amber-600 text-slate-950 font-bold py-2 rounded">สร้างห้อง (Host ใช้ API Key)</button><div id="mpInfo" class="hidden text-amber-300">รหัสห้อง: <b id="mpCode" class="text-lg"></b> ส่งให้เพื่อนได้เลย</div><div class="border-t border-slate-800 pt-2 flex gap-2"><input id="mpJoinCode" placeholder="รหัสห้อง" class="flex-1 bg-slate-950 border border-slate-700 rounded p-2"><button onclick="MP.join()" class="bg-slate-800 border border-slate-700 px-3 rounded">เข้าห้อง</button></div></div></div>`);
+</script>
+<script>
+// ---- 1) กัน Client เขียนทับเซฟเล่นคนเดียวของตัวเอง ----
+const _si = Storage.prototype.setItem;
+Storage.prototype.setItem = function (k, v) { if (MP.on && !MP.host && /^DND_(SCENE|LOG|HISTORY|JOURNAL|COMBAT)/.test(k)) return; return _si.call(this, k, v); };
+
+// ---- 2) สเตตัสเพิ่มสำหรับ Combat ----
+const _snap = MP.snap;
+MP.snap = function () { return { ..._snap(), atk: abilMod(weaponAbil()) + profBonus() + condPen(), wd: rules.weapon.dice, wm: abilMod(weaponAbil()), dx: abilMod("dex") }; };
+
+// ---- 3) คิวเรียก DM + ล็อกตอน DM กำลังเล่า ----
+MP.n = 0; MP.run = 0; MP.pend = {};
+MP.busy = v => { $("mpBusy").classList.toggle("hidden", !v); MP.bc({ t: "busy", v }); };
+MP.runIn = async f => { MP.run = 1; MP.n++; MP.busy(1); try { await f(); } finally { MP.run = 0; MP.n--; if (!MP.n) MP.busy(0); } };
+window.sendDirectAction = function (t, sys) {
+  if (!MP.on) return _sda(t, sys);
+  if (!MP.host) {
+    const mt = t.match(/\[ผลทอยเต๋า:[^\]]*\]/), tag = mt ? mt[0] : "";
+    const r = tag && lastRoll ? { chosen: lastRoll.chosen, total: lastRoll.total, mod: lastRoll.mod, desc: lastRoll.desc } : null;
+    MP.send(MP.hc, { t: "act", text: t.replace(tag, "").trim(), roll: r });
+    return Promise.resolve();
+  }
+  if (!sys && !t.startsWith("[ระบบ")) t = `[${MP.snap().name}] ` + t;
+  if (MP.run) return _sda(t, sys);                 // เรียกซ้อนจากระบบ Combat
+  return MP.q = MP.q.then(() => MP.runIn(() => _sda(t, sys)));
+};
+
+// ---- 4) กันโกงผลทอย: ทอยได้เฉพาะที่ DM สั่ง ครั้งเดียว และตรวจค่า ----
+const _or = MP.onRoll;
+MP.onRoll = function (r) { const id = MP.on ? MP.find(r.target) : null; if (id && id !== "host") MP.pend[id] = { dc: parseInt(r.dc) }; _or(r); };
+MP.act = function (id, m) {
+  const p = MP.roster[id]; if (!p) return;
+  let t = String(m.text || "").replace(/\[ผลทอยเต๋า:[^\]]*\]/g, "").trim().slice(0, 500);
+  const r = m.roll, pd = MP.pend[id];
+  if (r && pd && r.chosen >= 1 && r.chosen <= 20 && Math.abs(+r.mod) <= 15 && r.total === r.chosen + (+r.mod)) {
+    delete MP.pend[id];
+    t = `[ผลทอยเต๋า: ${String(r.desc).slice(0, 40)} ${sgn(+r.mod)} = ${r.total} | เทียบ DC ${pd.dc}: ${judge(r.chosen, r.total, pd.dc).text}] ` + t;
+  }
+  if (!t) return;
+  MP.q = MP.q.then(() => MP.runIn(() => _sda(`🧑 ${p.name}: ${t}`, true)));
+};
+
+// ---- 5) Host: รับการเชื่อมต่อ (แทนของ v1) ----
+MP.hostStart = function () {
+  if (!apiKey) { alert("Host ต้องใส่ Gemini API Key ก่อน"); toggleSettingsModal(); return; }
+  const code = Math.random().toString(36).slice(2, 7);
+  MP.peer = new Peer("solodnd-" + code);
+  MP.peer.on("open", () => { MP.on = true; MP.host = true; $("mpCode").textContent = code; $("mpInfo").classList.remove("hidden"); MP.sync(); });
+  MP.peer.on("error", e => alert("Peer error: " + e.type));
+  MP.peer.on("connection", c => {
+    c.on("open", () => {
+      if (Object.keys(MP.conns).length >= 5) { MP.send(c, { t: "full" }); setTimeout(() => c.close(), 300); return; }
+      MP.conns[c.peer] = c;
+      MP.send(c, { t: "init", msgs: msgLog.slice(-60), scene: currentScene, j: journal, r: MP.roster });
+      renderCombat();
+    });
+    c.on("data", m => {
+      if (m.t === "snap") { MP.roster[c.peer] = m.s; MP.sync(); }
+      else if (m.t === "act") MP.act(c.peer, m);
+      else if (m.t === "fx") appendMessage("System", String(m.x).slice(0, 200), "system");
+      else if (m.t === "catk" || m.t === "cend") MP.q = MP.q.then(() => MP.runIn(() => MP.cact(c.peer, m)));
+    });
+    c.on("close", () => { delete MP.conns[c.peer]; delete MP.roster[c.peer]; MP.sync(); });
+  });
+};
+
+// ---- 6) Combat หลายตัวละคร (Host เป็นผู้ตัดสิน) ----
+const _rc = window.renderCombat, _at = window.advanceTurn, _ea = window.enemyAct, _ep = window.endPlayerTurn, _pa = window.playerAttack;
+window.renderCombat = function () {
+  _rc();
+  if (MP.on && MP.host) MP.bc({ t: "cmb", c: combat ? { round: combat.round, idx: combat.idx, busy: combat.busy, order: combat.order.map(o => ({ id: o.id, name: o.name, type: o.type, pid: o.pid, hp: o.hp, maxHp: o.maxHp, ac: o.ac, init: o.init, dead: o.dead })) } : null });
+};
+MP.inject = function () {
+  const d20 = () => Math.floor(Math.random() * 20) + 1;
+  combat.order.forEach(o => { if (o.type === "pc") o.pid = "host"; });
+  Object.keys(MP.conns).forEach(id => { const p = MP.roster[id]; if (p) combat.order.push({ id: "p" + id, pid: id, type: "rpc", name: p.name, init: d20() + (p.dx || 0) }); });
+  combat.order.sort((a, b) => b.init - a.init); combat.idx = 0;
+  appendMessage("System", "⚔️ ลำดับเทิร์นรวม: " + combat.order.map(o => `${o.name} (${o.init})`).join(" → "), "system");
+};
+window.advanceTurn = async function () {
+  if (!MP.on || !MP.host) return _at();
+  if (!combat.mp) { combat.mp = 1; MP.inject(); }
+  combat.busy = true; renderCombat();
+  for (let g = 0; g < 80; g++) {
+    const c = combat.order[combat.idx];
+    if (!c.dead) {
+      const ok = c.type === "pc" ? (!downed && !dead) : c.type === "rpc" ? (MP.conns[c.pid] && (MP.roster[c.pid] || {}).hp > 0) : false;
+      if (ok) { combat.busy = false; renderCombat(); await flushCombat(false); return; }
+      if (c.type === "enemy") await enemyAct(c);
+    }
+    stepIdx();
+  }
+  combat.busy = false; renderCombat();
+};
+window.enemyAct = async function (c) {
+  if (!MP.on || !MP.host || !combat.mp) return _ea(c);
+  const alive = combat.order.filter(x => x.type === "rpc" && MP.roster[x.pid] && MP.roster[x.pid].hp > 0).map(x => x.pid);
+  if (!downed && !dead) alive.push("host");
+  if (!alive.length) return;
+  const id = alive[Math.floor(Math.random() * alive.length)];
+  if (id === "host") return _ea(c);
+  const p = MP.roster[id], r = Math.floor(Math.random() * 20) + 1, tot = r + c.atk, crit = r === 20, hit = r !== 1 && (crit || tot >= p.ac);
+  if (hit) {
+    const d = Math.max(1, rollDice(c.dmg, crit).total);
+    MP.send(MP.conns[id], { t: "hp", d: -d }); p.hp = Math.max(0, p.hp - d);
+    appendMessage("System", `🗡 ${c.name} → ${p.name}: ${crit ? "คริติคอล " : ""}โดน ${d} (ทอย ${tot} vs AC ${p.ac}) HP ${p.hp}/${p.max}`, "system");
+    combat.log.push(`${c.name} โจมตี ${p.name} โดน${crit ? " (คริติคอล)" : ""} ดาเมจ ${d}`);
+  } else {
+    appendMessage("System", `🛡 ${c.name} โจมตี ${p.name} พลาด (ทอย ${tot} vs AC ${p.ac})`, "system");
+    combat.log.push(`${c.name} โจมตี ${p.name} พลาด`);
+  }
+  MP.sync();
+};
+MP.cact = async function (id, m) {
+  const c = combat && combat.order[combat.idx];
+  if (!c || c.pid !== id || combat.busy || c.type !== "rpc") return;
+  const p = MP.roster[id];
+  if (m.t === "cend") return endPlayerTurn(false);
+  combat.busy = true; renderCombat();
+  const foes = combat.order.filter(x => x.type === "enemy" && !x.dead), t = foes.find(x => x.id === m.target) || foes[0];
+  if (!t) { combat.busy = false; renderCombat(); return; }
+  const r = Math.floor(Math.random() * 20) + 1, tot = r + (p.atk || 2), crit = r === 20, hit = r !== 1 && (crit || tot >= t.ac);
+  if (hit) {
+    const dmg = Math.max(1, rollDice(p.wd || "1d8", crit).total + (p.wm || 0)); t.hp -= dmg;
+    combat.log.push(`${p.name} โจมตี ${t.name} โดน${crit ? " (คริติคอล)" : ""} ดาเมจ ${dmg}`);
+    appendMessage("System", `⚔️ ${p.name} → ${t.name}: ${crit ? "คริติคอล " : ""}โดน ${dmg} (ทอย ${tot} vs AC ${t.ac})`, "system");
+    if (t.hp <= 0) { t.dead = true; combat.log.push(`${t.name} ถูกสังหาร`); }
+  } else { combat.log.push(`${p.name} โจมตี ${t.name} พลาด`); appendMessage("System", `💨 ${p.name} โจมตี ${t.name} พลาด (ทอย ${tot} vs AC ${t.ac})`, "system"); }
+  await endPlayerTurn(true);
+};
+// Client: ส่งคำสั่งต่อสู้ไปให้ Host ตัดสิน
+window.playerAttack = function () { if (MP.on && !MP.host) { if (combat && !combat.busy) { combat.busy = true; renderCombat(); MP.send(MP.hc, { t: "catk", target: combat.sel }); } return; } return _pa(); };
+window.endPlayerTurn = function (a) { if (MP.on && !MP.host) { if (combat) { combat.busy = true; renderCombat(); } MP.send(MP.hc, { t: "cend" }); return; } return _ep(a); };
+
+// ---- 7) Client รับข้อมูลเพิ่ม ----
+const _recv = MP.recv;
+MP.recv = function (m) {
+  if (m.t === "busy") { $("mpBusy").classList.toggle("hidden", !m.v); $("sendBtn").disabled = !!m.v; return; }
+  if (m.t === "cmb") {
+    if (!m.c) combat = null;
+    else { const me = MP.peer.id; combat = { round: m.c.round, idx: m.c.idx, busy: m.c.busy, sel: (combat && combat.sel) || null, smite: false, log: [], order: m.c.order.map(o => ({ ...o, type: o.type === "enemy" ? "enemy" : (o.pid === me ? "pc" : "rpc") })) }; }
+    renderCombat(); return;
+  }
+  _recv(m);
+};
+
+// ---- 8) UI: แบนเนอร์ DM กำลังเล่า + ปิดปุ่มเทิร์นของคนอื่นบน Host ----
+$("narrativeBox").insertAdjacentHTML("beforebegin", `<div id="mpBusy" class="hidden text-center text-[11px] text-amber-300 py-0.5">⏳ DM กำลังเล่าเรื่อง…</div>`);
 </script>
 </body>
 </html>
