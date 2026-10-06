@@ -18,7 +18,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif}
 @keyframes tumble{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
 .shake{animation:shake .5s}.pop{animation:pop .45s}.tumble{animation:tumble .12s linear infinite}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 h-[100dvh] flex flex-col overflow-hidden">
 
@@ -1749,70 +1749,188 @@ MP.recv = function (m) {
 // ---- 8) UI: แบนเนอร์ DM กำลังเล่า + ปิดปุ่มเทิร์นของคนอื่นบน Host ----
 $("narrativeBox").insertAdjacentHTML("beforebegin", `<div id="mpBusy" class="hidden text-center text-[11px] text-amber-300 py-0.5">⏳ DM กำลังเล่าเรื่อง…</div>`);
 </script>
+
 <script>
-// ================= FIX: ออนไลน์ข้ามเครือข่าย (TURN) =================
-// ปัญหาเดิม: new Peer() ใช้แค่ STUN ของ Google ไม่มี TURN
-// พอผู้เล่นอยู่คนละเครือข่าย (โดยเฉพาะมือถือ 4G/5G ที่เป็น CGNAT / Symmetric NAT) P2P จะต่อกันไม่ได้
-// วิธีแก้: ใส่ TURN server (ตัว relay) ให้ทั้ง Host และคนเข้าห้อง
-//
-// >>> ใส่ค่า TURN ของคุณตรงนี้ (สมัครฟรีที่ https://dashboard.metered.ca/signup แล้วก๊อปอาร์เรย์ iceServers มาวาง) <<<
-const iceServers = [
-  {
-    urls: "stun:stun.relay.metered.ca:80",
-  },
-  {
-    urls: "turn:global.relay.metered.ca:80",
-    username: "e6540f80e5bb8fc08db6a1d1",
-    credential: "IW7HcWZW5SAGzt3C",
-  },
-  {
-    urls: "turn:global.relay.metered.ca:80?transport=tcp",
-    username: "e6540f80e5bb8fc08db6a1d1",
-    credential: "IW7HcWZW5SAGzt3C",
-  },
-  {
-    urls: "turn:global.relay.metered.ca:443",
-    username: "e6540f80e5bb8fc08db6a1d1",
-    credential: "IW7HcWZW5SAGzt3C",
-  },
-  {
-    urls: "turns:global.relay.metered.ca:443?transport=tcp",
-    username: "e6540f80e5bb8fc08db6a1d1",
-    credential: "IW7HcWZW5SAGzt3C",
-  },
-];
-// (ทางเลือก) วางค่า iceServers เป็น JSON ผ่านคอนโซลครั้งเดียวต่อเครื่อง:
-//   localStorage.setItem("DND_TURN", JSON.stringify([...]))
-let _userTurn = []; try { _userTurn = JSON.parse(localStorage.getItem("DND_TURN") || "[]"); } catch (e) {}
-const MP_ICE = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" },
-  { urls: "stun:stun.cloudflare.com:3478" },
-  ...TURN_SERVERS, ..._userTurn
-];
-const HAS_TURN = MP_ICE.some(x => String(x.urls).startsWith("turn"));
+// ================= Supabase Realtime (Broadcast + Presence) แทน PeerJS =================
+// ตั้งค่าเริ่มต้นได้ที่นี่ (หรือกรอกในหน้าต่าง "👥 ห้อง" ระบบจะจำไว้ในเครื่อง)
+const SB_DEFAULT = { url: "", key: "" };   // เช่น { url: "https://xxxx.supabase.co", key: "eyJ...anon key..." }
+const SB = { cl: null, ch: null, hostKey: null, got: false, banned: new Set(), lastAmb: "", lastSfx: 0 };
+SB.id = sessionStorage.getItem("DND_SB_ID") || ("u" + Math.random().toString(36).slice(2, 10));
+sessionStorage.setItem("DND_SB_ID", SB.id);
+const sbCfg = () => { try { return JSON.parse(localStorage.getItem("DND_SB_CFG") || "null") || SB_DEFAULT; } catch (e) { return SB_DEFAULT; } };
+const MAX_GUESTS = 5; // + Host = 6 คน
 
-const _PeerOrig = window.Peer;
-window.Peer = function (id, opts) {
-  if (id && typeof id === "object") { opts = id; id = undefined; }
-  opts = { ...(opts || {}), config: { iceServers: MP_ICE, iceCandidatePoolSize: 4 } };
-  return id ? new _PeerOrig(id, opts) : new _PeerOrig(opts);
-};
-window.Peer.prototype = _PeerOrig.prototype;
+function toast(x) {
+  const d = document.createElement("div");
+  d.className = "fixed top-3 left-1/2 -translate-x-1/2 z-[60] bg-slate-900/95 border border-amber-500/60 text-amber-200 text-xs px-3 py-2 rounded-lg shadow-xl";
+  d.textContent = x; document.body.appendChild(d); setTimeout(() => d.remove(), 3500);
+}
+function sysNote(x) { _am("System", x, "system", false); toast(x); if (MP.on && MP.host) MP.bc({ t: "msg", s: "System", x, ty: "system" }); }
 
-// เข้าห้อง: ตัดช่องว่าง/ตัวพิมพ์ใหญ่ + แจ้งเตือนถ้าต่อไม่ติดภายใน 20 วินาที (เดิมเงียบไปเฉยๆ)
-const _mpJoin = MP.join;
-MP.join = function () {
-  const el = $("mpJoinCode"); el.value = el.value.trim().toLowerCase(); if (!el.value) return;
-  _mpJoin();
-  let err = false; if (MP.peer) MP.peer.on("error", () => { err = true; });
-  setTimeout(() => {
-    if (!MP.on && !err) alert("เชื่อมต่อห้องไม่สำเร็จ (หมดเวลา)\n" + (HAS_TURN
-      ? "ตรวจว่ารหัสห้องถูกต้อง และ Host ยังเปิดหน้าเว็บค้างไว้อยู่"
-      : "สาเหตุที่พบบ่อย: ผู้เล่นอยู่คนละเครือข่ายและยังไม่ได้ตั้งค่า TURN server (ดูค่า TURN_SERVERS ในโค้ด)"));
-  }, 20000);
+// ---- ส่ง/รับ ----
+SB.tx = (to, m) => { try { if (SB.ch) SB.ch.send({ type: "broadcast", event: "m", payload: { to, from: MP.host ? "host" : SB.id, m } }); } catch (e) {} };
+MP.bc = m => SB.tx("*", m);
+
+async function sbClose() { if (SB.ch) { try { await SB.cl.removeChannel(SB.ch); } catch (e) {} SB.ch = null; } }
+async function sbOpen(code, host) {
+  const c = { url: $("sbUrl").value.trim(), key: $("sbKey").value.trim() };
+  if (!/^https?:\/\//.test(c.url) || !c.key) { alert("กรอก Supabase URL และ Anon Key ก่อน"); return false; }
+  if (!window.supabase) { alert("โหลด Supabase SDK ไม่สำเร็จ ตรวจอินเทอร์เน็ต"); return false; }
+  localStorage.setItem("DND_SB_CFG", JSON.stringify(c));
+  await sbClose();
+  SB.cl = supabase.createClient(c.url, c.key, { realtime: { params: { eventsPerSecond: 20 } } });
+  const ch = SB.ch = SB.cl.channel("dnd-" + code, { config: { broadcast: { self: false }, presence: { key: SB.id } } });
+  ch.on("broadcast", { event: "m" }, ({ payload }) => SB.rx(payload));
+  ch.on("presence", { event: "leave" }, ({ key }) => SB.left(key));
+  return new Promise(res => ch.subscribe(async st => {
+    if (st === "SUBSCRIBED") { await ch.track({ name: $("charName").value || "ผู้เล่น", host }); res(true); }
+    else if (st === "CHANNEL_ERROR" || st === "TIMED_OUT") { res(false); if (!MP.on) alert("เชื่อม Supabase Realtime ไม่สำเร็จ: ตรวจ URL / Anon Key"); }
+  }));
+}
+const hostsIn = () => { const s = SB.ch.presenceState(); return Object.keys(s).filter(k => k !== SB.id && s[k].some(p => p.host)); };
+
+MP.hostStart = async function () {
+  if (!apiKey) { alert("Host ต้องใส่ Gemini API Key ก่อน"); toggleSettingsModal(); return; }
+  if (MP.on) return;
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  if (!await sbOpen(code, true)) return;
+  await new Promise(r => setTimeout(r, 1200));
+  if (hostsIn().length) { alert("รหัสห้องซ้ำ ลองใหม่อีกครั้ง"); await sbClose(); return; }
+  MP.on = true; MP.host = true; MP.peer = { id: "host" }; SB.banned.clear();
+  $("mpCode").textContent = code; $("mpInfo").classList.remove("hidden"); MP.sync();
+  toast("สร้างห้องแล้ว: " + code);
 };
-if (!HAS_TURN) console.warn("[MP] ยังไม่ได้ตั้งค่า TURN — ผู้เล่นต่างเครือข่ายอาจเชื่อมต่อไม่ได้");
+MP.join = async function () {
+  const code = $("mpJoinCode").value.trim().toUpperCase(); if (!code || MP.on) return;
+  if (!await sbOpen(code, false)) return;
+  await new Promise(r => setTimeout(r, 1500));
+  const hk = hostsIn()[0];
+  if (!hk) { alert("ไม่พบห้องนี้ (ตรวจรหัส และให้ Host เปิดหน้าเว็บค้างไว้)"); await sbClose(); return; }
+  SB.hostKey = hk; SB.got = false;
+  MP.on = true; MP.host = false; MP.peer = { id: SB.id };
+  MP.hc = { open: true, peer: "host", send: m => SB.tx("host", m) };
+  MP.send(MP.hc, { t: "hello" });
+  $("mpModal").classList.add("hidden");
+  setTimeout(() => { if (MP.on && !MP.host && !SB.got) { alert("Host ไม่ตอบสนอง"); MP.leave(); } }, 8000);
+  MP.drawRoster();
+};
+
+// ---- Host รับข้อความ ----
+SB.rx = function (p) {
+  const { to, from, m } = p || {}; if (!m || !m.t) return;
+  if (MP.host) {
+    if (from === "host" || (to !== "host" && to !== "*")) return;
+    if (m.t === "hello") return SB.hello(from);
+    if (!MP.conns[from]) return;
+    if (m.t === "snap" && m.s) {
+      const s = m.s;
+      MP.roster[from] = { name: String(s.name || "?").slice(0, 30), cls: String(s.cls || "").slice(0, 30), hp: +s.hp || 0, max: Math.max(1, +s.max || 1), ac: +s.ac || 10, ab: String(s.ab || "").slice(0, 80), conds: (Array.isArray(s.conds) ? s.conds : []).slice(0, 8).map(x => String(x).slice(0, 20)), atk: +s.atk || 0, wd: /^\d+d\d+$/.test(s.wd) ? s.wd : "1d8", wm: +s.wm || 0, dx: +s.dx || 0 };
+      MP.sync();
+    }
+    else if (m.t === "act") MP.act(from, m);
+    else if (m.t === "fx") _am("System", String(m.x).slice(0, 200), "system", true);
+    else if (m.t === "catk" || m.t === "cend") MP.q = MP.q.then(() => MP.runIn(() => MP.cact(from, m)));
+  } else if (MP.on) {
+    if (from !== "host" || (to !== "*" && to !== SB.id)) return;
+    MP.recv(m);
+  }
+};
+SB.hello = function (id) {
+  if (!/^u[a-z0-9]{4,12}$/.test(id)) return;
+  const tmp = { open: true, send: m => SB.tx(id, m) };
+  if (SB.banned.has(id)) return MP.send(tmp, { t: "kick" });
+  if (!MP.conns[id] && Object.keys(MP.conns).length >= MAX_GUESTS) return MP.send(tmp, { t: "full" });
+  const isNew = !MP.conns[id], pr = (SB.ch.presenceState()[id] || [])[0] || {};
+  const c = MP.conns[id] = MP.conns[id] || { open: true, peer: id, send: m => SB.tx(id, m), close() {} };
+  MP.send(c, { t: "init", msgs: msgLog.slice(-60), scene: currentScene, j: journal, r: MP.roster });
+  MP.send(c, { t: "amb", ty: currentScene ? currentScene.type : "mist" });
+  if (isNew) sysNote(`🟢 ${String(pr.name || "ผู้เล่น").slice(0, 30)} เข้าร่วมห้อง (${Object.keys(MP.conns).length + 1}/6)`);
+  renderCombat();
+};
+SB.drop = function (id, text) {
+  const wasTurn = combat && combat.mp && combat.order[combat.idx] && combat.order[combat.idx].pid === id;
+  delete MP.conns[id]; delete MP.roster[id];
+  sysNote(text); MP.sync();
+  if (combat) {
+    if (wasTurn) { stepIdx(); MP.q = MP.q.then(() => MP.runIn(() => advanceTurn())); } else renderCombat();
+  }
+};
+SB.left = function (key) {
+  if (!MP.on || key === SB.id) return;
+  if (MP.host) { if (MP.conns[key]) SB.drop(key, `🔴 ${(MP.roster[key] || {}).name || "ผู้เล่น"} ออกจากห้อง`); }
+  else if (key === SB.hostKey) { alert("Host หลุดหรือปิดห้องแล้ว"); location.reload(); }
+};
+
+// ---- เตะ / ออกจากห้อง ----
+MP.kick = function (id) {
+  if (!MP.host || !MP.conns[id]) return;
+  const n = (MP.roster[id] || {}).name || "ผู้เล่น";
+  if (!confirm(`เตะ ${n} ออกจากห้อง?`)) return;
+  MP.send(MP.conns[id], { t: "kick" }); SB.banned.add(id);
+  SB.drop(id, `👢 ${n} ถูกเตะออกจากห้อง`);
+};
+MP.leave = async function () {
+  if (!MP.on) { await sbClose(); return; }
+  if (MP.host) {
+    if (!confirm("ปิดห้อง? ผู้เล่นทุกคนจะถูกตัดออก")) return;
+    MP.bc({ t: "closed" }); await new Promise(r => setTimeout(r, 500)); await sbClose();
+    MP.on = false; MP.host = false; MP.conns = {}; MP.roster = {}; MP.peer = null; MP.hc = null;
+    if (combat && combat.mp) { combat.order = combat.order.filter(o => o.type !== "rpc"); combat.idx = Math.min(combat.idx, combat.order.length - 1); combat.mp = 0; }
+    $("mpInfo").classList.add("hidden"); $("mpBusy").classList.add("hidden"); MP.drawRoster(); if (combat) renderCombat(); toast("ปิดห้องแล้ว");
+  } else { await sbClose(); location.reload(); }  // รีโหลดเพื่อกลับสู่เซฟเล่นคนเดียวของตัวเอง (ไม่ถูกทับระหว่างอยู่ในห้อง)
+};
+
+// ---- Client รับข้อความพิเศษ ----
+const _r3 = MP.recv, _amb = window.ambience, _sfx = window.sfx;
+MP.recv = function (m) {
+  if (m.t === "kick") { alert("คุณถูกเตะออกจากห้อง"); return MP.leave(); }
+  if (m.t === "closed") { alert("Host ปิดห้องแล้ว"); return MP.leave(); }
+  if (m.t === "full") { alert("ห้องเต็มแล้ว (สูงสุด 6 คน)"); return MP.leave(); }
+  if (m.t === "amb") return _amb(m.ty);
+  if (m.t === "sfx") return _sfx(m.k);
+  _r3(m);
+  if (m.t === "init") { SB.got = true; MP.sync(); }
+};
+
+// ---- Sync เพลง/เสียงจาก Host ----
+window.ambience = function (t) { _amb(t); if (MP.on && MP.host && t !== SB.lastAmb) { SB.lastAmb = t; MP.bc({ t: "amb", ty: t }); } };
+window.sfx = function (k) { _sfx(k); if (MP.on && MP.host && Date.now() - SB.lastSfx > 150) { SB.lastSfx = Date.now(); MP.bc({ t: "sfx", k }); } };
+
+// ---- Combat: โจมตีได้เฉพาะเจ้าของเทิร์น ----
+const _pa2 = window.playerAttack;
+window.playerAttack = function () {
+  if (MP.on) { const c = combat && combat.order[combat.idx]; if (!c || c.type !== "pc" || combat.busy) { toast("ยังไม่ถึงเทิร์นของคุณ"); return; } }
+  return _pa2.apply(this, arguments);
+};
+
+// ---- Party Roster HUD + ปุ่มเตะ/ออก ----
+MP.drawRoster = function () {
+  const e = escapeHtml, n = Object.keys(MP.roster).length;
+  const kickBtn = id => MP.host && id !== "host" ? `<button onclick="MP.kick('${id}')" title="เตะ" class="text-rose-400 hover:text-rose-300 ml-1">👢</button>` : "";
+  const bar = $("rosterBar");
+  if (bar) bar.innerHTML = Object.entries(MP.roster).map(([id, p]) => {
+    const pc = Math.max(0, Math.min(100, p.hp / p.max * 100));
+    return `<div class="flex-shrink-0 w-40 bg-slate-900/90 border ${id === (MP.host ? "host" : SB.id) ? "border-amber-500/70" : "border-slate-700"} rounded-lg p-1.5 text-[10px]"><div class="flex justify-between"><span class="text-amber-300 font-semibold truncate">${id === "host" ? "👑 " : ""}${e(p.name)}</span>${kickBtn(id)}</div><div class="text-slate-400 truncate">${e(p.cls)}</div><div class="h-1.5 bg-slate-800 rounded mt-1 overflow-hidden"><div class="h-full ${pc > 50 ? "bg-emerald-500" : pc > 25 ? "bg-amber-500" : "bg-rose-500"}" style="width:${pc}%"></div></div><div class="text-slate-300 mt-0.5">HP ${p.hp}/${p.max} · AC ${p.ac}</div><div class="text-slate-500 truncate">${e(p.ab)}</div><div class="text-rose-300 truncate">${e(p.conds.join(", "))}</div></div>`;
+  }).join("") + (MP.on ? `<button onclick="MP.leave()" class="flex-shrink-0 self-center bg-rose-900/60 border border-rose-700 text-rose-200 rounded-lg px-2 py-1 text-[11px]">🚪 ${MP.host ? "ปิดห้อง" : "ออกห้อง"}</button>` : "");
+  const ml = $("mpMembers"); if (ml) ml.innerHTML = Object.entries(MP.roster).map(([id, p]) => `<div class="flex justify-between bg-slate-950 border border-slate-800 rounded px-2 py-1"><span>${id === "host" ? "👑 " : "🧑 "}${e(p.name)} <span class="text-slate-500">${e(p.cls)}</span></span>${kickBtn(id)}</div>`).join("");
+  const b = $("mpBtn"); if (b) b.textContent = MP.on ? `👥 ในห้อง ${n}/6` : "👥 ห้อง";
+  const lb = $("mpLeaveBtn"); if (lb) lb.classList.toggle("hidden", !MP.on);
+};
+
+// ---- UI: ห้อง ----
+$("mpModal").remove();
+document.body.insertAdjacentHTML("beforeend", `<div id="mpModal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50"><div class="bg-slate-900 border border-slate-800 rounded-xl max-w-sm w-full p-4 flex flex-col gap-2 text-xs max-h-[90dvh] overflow-y-auto"><div class="flex justify-between"><b class="text-amber-400">ห้องมัลติเพลเยอร์ (2–6 คน)</b><button onclick="$('mpModal').classList.add('hidden')" class="text-slate-400 text-lg">&times;</button></div>
+<label class="text-slate-400">Supabase URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co" class="bg-slate-950 border border-slate-700 rounded p-2">
+<label class="text-slate-400">Supabase Anon Key (public)</label><input id="sbKey" type="password" placeholder="eyJ..." class="bg-slate-950 border border-slate-700 rounded p-2">
+<button onclick="MP.hostStart()" class="bg-amber-600 text-slate-950 font-bold py-2 rounded mt-1">สร้างห้อง (Host ใช้ Gemini API Key)</button>
+<div id="mpInfo" class="hidden text-amber-300">รหัสห้อง: <b id="mpCode" class="text-lg tracking-widest select-all"></b> ส่งให้เพื่อนได้เลย</div>
+<div class="border-t border-slate-800 pt-2 flex gap-2"><input id="mpJoinCode" placeholder="รหัสห้อง" class="flex-1 bg-slate-950 border border-slate-700 rounded p-2 uppercase"><button onclick="MP.join()" class="bg-slate-800 border border-slate-700 px-3 rounded">เข้าห้อง</button></div>
+<div id="mpMembers" class="flex flex-col gap-1"></div>
+<button id="mpLeaveBtn" onclick="MP.leave()" class="hidden bg-rose-900/60 border border-rose-700 text-rose-200 py-2 rounded">🚪 ออกจากห้อง</button></div></div>`);
+$("sbUrl").value = sbCfg().url || ""; $("sbKey").value = sbCfg().key || "";
+$("mpBtn").onclick = () => { $("mpModal").classList.remove("hidden"); $("mpModal").classList.add("flex"); };
+window.addEventListener("beforeunload", () => { try { if (SB.ch) SB.ch.untrack(); } catch (e) {} });
 </script>
+
 </body>
 </html>
